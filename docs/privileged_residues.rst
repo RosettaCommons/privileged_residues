@@ -5,7 +5,7 @@ Submodules
 ----------
 
 privileged\_residues\.hbond\_ray\_pairs module
-----------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: privileged_residues.hbond_ray_pairs
     :members:
@@ -13,7 +13,7 @@ privileged\_residues\.hbond\_ray\_pairs module
     :show-inheritance:
 
 privileged\_residues\.position\_residue module
-----------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: privileged_residues.position_residue
     :members:
@@ -21,7 +21,7 @@ privileged\_residues\.position\_residue module
     :show-inheritance:
 
 privileged\_residues\.privileged\_residues module
--------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: privileged_residues.privileged_residues
     :members:
@@ -29,7 +29,7 @@ privileged\_residues\.privileged\_residues module
     :show-inheritance:
 
 privileged\_residues\.process\_networks module
-----------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: privileged_residues.process_networks
     :members:
