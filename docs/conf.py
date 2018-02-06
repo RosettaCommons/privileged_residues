@@ -28,6 +28,7 @@ from unittest.mock import MagicMock
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
+            return ''
             return MagicMock()
 
 MOCK_MODULES = ['pyrosetta', 'pyrosetta.bindings.utility',
