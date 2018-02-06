@@ -1,4 +1,4 @@
-privileged\_residues package
+Privileged Residues Package
 ============================
 
 Submodules
