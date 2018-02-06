@@ -1,5 +1,5 @@
-Privileged Residues API
-=======================
+API Documentation
+=================
 
 .. toctree::
    :maxdepth: 4
