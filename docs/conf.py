@@ -28,13 +28,20 @@ from unittest.mock import MagicMock
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
-            return str(MagicMock())
+            return MagicMock()
+
+
+class DumbThing():
+    def __init__(self):
+        self.__all__ = []
+
 
 MOCK_MODULES = ['pyrosetta', 'pyrosetta.bindings.utility',
                 'pyrosetta.rosetta.core.scoring.hbonds',
                 'pyrosetta.rosetta.core.select.residue_selector',
-                'rif', 'rif.geom.ray_hash', 'rif.hash']
+                'rif']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+sys.modules.update({'rif.geom.ray_hash': DumbThing(), 'rif.hash': DumbThing()})
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
