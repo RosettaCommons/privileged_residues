@@ -8,6 +8,4 @@ __version__ = '0.1.0'
 
 
 from .privileged_residues import *
-from .hbond_ray_pairs import *
-from . import position_residue, process_networks
-# from .privileged_residues import hbond_ray_pairs, position_residue, process_networks
+from . import hbond_ray_pairs, position_residue, process_networks
