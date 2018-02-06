@@ -32,7 +32,7 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['pyrosetta', 'pyrosetta.bindings.utility',
                 'pyrosetta.rosetta.core.scoring.hbonds',
-                'pyrosetta.rosetta.core.select.residue_selector import LayerSelector',
+                'pyrosetta.rosetta.core.select.residue_selector',
                 'rif', 'rif.geom.ray_hash', 'rif.hash']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
