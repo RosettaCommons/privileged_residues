@@ -27,7 +27,7 @@ def _fname_to_HTD(fname_string):
 
     Returns:
         HashTableData: A nameedtuple populated with the information
-            encoded in `fname_string`.
+        encoded in `fname_string`.
     """
     c = path.splitext(path.basename(fname_string))[0].split('_')
     assert(len(c) == 5)
@@ -50,7 +50,7 @@ def get_ht_from_table(bin, cart_resl, ori_resl, cart_bound):
 
     Returns:
         numpy.array: A (4, 4) array representing the homogenous
-            transform at the center of the bin.
+        transform at the center of the bin.
     """
     # these are kind of magic numbers
     # is this thing expensive to instantiate? I could move stuff around to make

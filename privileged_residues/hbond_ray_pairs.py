@@ -59,9 +59,8 @@ def find_hbonds(p, derivatives=False, exclude_bb=True, exclude_bsc=True,
 
     Returns:
         pyrosetta.rosetta.core.scoring.hbonds.HBondSet: A hydrogen bond
-            set containing the specified types of hydrogen bonds in the
-            Pose.
-
+        set containing the specified types of hydrogen bonds in the
+        Pose.
     """
     p.update_residue_neighbors()
     hbset = HBondSet()
@@ -81,9 +80,9 @@ def surface_only():
 
     Returns:
         pyrosetta.rosetta.core.select.residue_selector.LayerSelector:
-            A selector that will return a vector of boolean values
-            where True indicates a surface residue and False
-            indicates a core residue.
+        A selector that will return a vector of boolean values where
+        True indicates a surface residue and False indicates a core
+        residue.
     """
     # use this with a LayerSelector to control which residues are in the set
     select_surface = LayerSelector()
@@ -95,8 +94,8 @@ def surface_only():
 
 def identify_bonded_pairs(p, hbset):
     """Construct an HBondSet that only contains hydrogen bonded
-        residues that are on the surface of the supplied Pose and
-        return it.
+    residues that are on the surface of the supplied Pose and return
+    it.
 
     Args:
         p (pyrosetta.Pose): The Pose to be examined.
@@ -106,7 +105,7 @@ def identify_bonded_pairs(p, hbset):
 
     Returns:
         pyrosetta.rosetta.core.scoring.hbonds.HBondSet: A hydrogen bond
-            set containing only residues on the surface of the Pose.
+        set containing only residues on the surface of the Pose.
     """
     return HBondSet(hbset, surface_only().apply(p))
 
@@ -117,9 +116,10 @@ def create_ray(center, base):
 
     Notes:
         The ray is constructed such that:
-            1. The direction points from `base` to `center` and is unit
-                length.
-            2. The point at which the ray is centered is at `center`.
+
+        1. The direction points from `base` to `center` and is unit
+           length.
+        2. The point at which the ray is centered is at `center`.
 
     Args:
         center (numpy.array): A (2, 3) array representing the
@@ -129,7 +129,7 @@ def create_ray(center, base):
 
     Returns:
         numpy.array: A (2,4) array representing a ray in space with a
-            point and a unit direction.
+        point and a unit direction.
     """
     direction = center - base
     direction /= np.linalg.norm(direction)
@@ -159,8 +159,8 @@ def find_ray_pair_for_residues(don_rsd, acc_rsd):
 
     Returns:
         tuple: A tuple of rays represented as numpy.arrays with shape
-            (2, 4) representing a point and a unit direction. The first
-            ray describes the donor, the second describes the acceptor.
+        (2, 4) representing a point and a unit direction. The first ray
+        describes the donor, the second describes the acceptor.
     """
     if True:
         for i in range(1, don_rsd.natoms() + 1):
@@ -216,8 +216,8 @@ def find_ray_pair_for_hbond(pose, hb):
 
     Returns:
         tuple: A tuple of rays represented as numpy.arrays with shape
-            (2, 4) representing a point and a unit direction. The first
-            ray describes the donor, the second describes the acceptor.
+        (2, 4) representing a point and a unit direction. The first ray
+        describes the donor, the second describes the acceptor.
     """
     # donor
     don_heavy_atm_id = pose.residue(hb.don_res()).atom_base(hb.don_hatm())
@@ -250,7 +250,7 @@ def hash_rays(r1, r2, resl=2, lever=10):
 
     Returns:
         numpy.array: An (N,) array of the hashed values (numpy.uint64)
-            for each pair of rays.
+        for each pair of rays.
     """
     h = rh.RayToRay4dHash(resl, lever, bound=1000)
 
@@ -268,10 +268,11 @@ def get_frame_for_coords(coords):
 
     Notes:
         The frame is constructed such that:
-            1. The point is at p2.
-            2. The z axis points along p1 to p2.
-            3. The y axis is in the p0-p1-p2 plane.
-            4. The x axis is the cross product of y and z.
+
+        1. The point is at p2.
+        2. The z axis points along p1 to p2.
+        3. The y axis is in the p0-p1-p2 plane.
+        4. The x axis is the cross product of y and z.
 
     Args:
         coords (numpy.array): A (3, 3) array representing the cartesian
@@ -279,7 +280,7 @@ def get_frame_for_coords(coords):
 
     Returns:
         numpy.array: A (4, 4) array representing the coordinate frame
-            as a homogenous transform.
+        as a homogenous transform.
     """
 
     assert(coords.shape == (3, 3))
@@ -324,7 +325,7 @@ def get_frame_for_rays(r1, r2):
 
     Returns:
         numpy.array: A (4, 4) array representing the coordinate frame
-            as a homogenous transform.
+        as a homogenous transform.
     """
     trans = r1[0]
     x_hat = r1[1]

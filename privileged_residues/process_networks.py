@@ -45,16 +45,17 @@ def get_models_from_file(fname):
 
     Notes:
         ATOM records are represented by a fixed-width format described
-        here:
-        http://www.wwpdb.org/documentation/file-format-content/format33
-        /sect9.html#ATOM
+        here_.
+
+        .. _here: http://www.wwpdb.org/documentation/\
+        file-format-content/format33/sect9.html#ATOM
 
     Args:
         fname (str): The name of a PDB-formatted file.
 
     Returns:
         list: A list of lists of ATOM records that represent the
-            models.
+        models.
     """
     with open(fname, 'r') as f:
         atom_records = [l.rstrip() for l in f.readlines()]
@@ -79,9 +80,10 @@ def pose_from_atom_records(atom_recs):
 
     Notes:
         ATOM records are represented by a fixed-width format described
-        here:
-        http://www.wwpdb.org/documentation/file-format-content/format33
-        /sect9.html#ATOM
+        here_.
+
+        .. _here: http://www.wwpdb.org/documentation/\
+        file-format-content/format33/sect9.html#ATOM
 
     Args:
         atom_recs (list): A list of ATOM records (str) describing a
@@ -90,7 +92,7 @@ def pose_from_atom_records(atom_recs):
 
     Returns:
         pyrosetta.Pose: The Pose containing the information in the ATOM
-            records.
+        records.
     """
     p = pyrosetta.Pose()
 
@@ -136,8 +138,8 @@ def rays_for_interaction(donor, acceptor, interaction):
 
     Returns:
         tuple: A tuple of rays represented as (2, 4) numpy.arrays
-            describing the stationary and positioned residues,
-            respectively.
+        describing the stationary and positioned residues,
+        respectively.
     """
     from pyrosetta.rosetta.core.id import AtomID
 
