@@ -22,6 +22,17 @@ import os
 # absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
+# Skip non-pip-installable dependencies
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return MagicMock()
+
+MOCK_MODULES = ['pyrosetta', 'rif']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
 project_root = os.path.dirname(cwd)
