@@ -1,5 +1,4 @@
 import argparse
-import hbond_ray_pairs
 import numpy as np
 import rif
 import sys
@@ -12,6 +11,7 @@ from more_itertools import chunked
 from os import makedirs, path
 from rif.hash import *
 
+from privileged_residues import hbond_ray_pairs
 
 # the order of the keys of this dictionary
 FxnlGrp = namedtuple('FxnlGrp', ['resName', 'donor', 'acceptor', 'atoms'])

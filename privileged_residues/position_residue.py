@@ -1,8 +1,6 @@
 # this script will be how I load and search hash tables
 import argparse
-import hbond_ray_pairs
 import numpy as np
-import process_networks
 import pickle
 import pyrosetta
 import sys
@@ -10,6 +8,8 @@ import sys
 from collections import namedtuple
 from rif.hash import *
 from os import path
+
+from privileged_residues import hbond_ray_pairs, process_networks
 
 HashTableData = namedtuple('HashTableData', ['type', 'cart_resl', 'ori_resl',
                                              'cart_bound'])
