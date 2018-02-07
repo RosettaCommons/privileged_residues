@@ -6,3 +6,4 @@ History
 ------------------
 
 * First release on PyPI.
+* This package is used to position amino acid residues at a protein interface in a "privileged" position.
