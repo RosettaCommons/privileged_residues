@@ -2,14 +2,28 @@
 import argparse
 import numpy as np
 import pickle
-import pyrosetta
 import sys
 
 from collections import namedtuple
-from rif.hash import *
 from os import path
 
-from privileged_residues import hbond_ray_pairs, process_networks
+# The following packages are not pip-installable
+# The import calls are wrapped in a try/except block
+try:
+    import pyrosetta
+except ImportError:
+    print('Module "pyrosetta" not found in the current environment! '
+          'Go to http://www.pyrosetta.org to download it.')
+    pass
+
+try:
+    from rif.hash import *
+except ImportError:
+    print('Module "rif" not found in the current environment! '
+          'Go to https://github.com/willsheffler/rif for more information.')
+    pass
+
+from . import hbond_ray_pairs, process_networks
 
 HashTableData = namedtuple('HashTableData', ['type', 'cart_resl', 'ori_resl',
                                              'cart_bound'])

@@ -1,15 +1,29 @@
 import argparse
 import logging
 import numpy as np
-import pyrosetta
-import rif
-import rif.geom.ray_hash as rh
 import sys
 
 from collections import namedtuple
-from pyrosetta.bindings.utility import bind_method
-from pyrosetta.rosetta.core.scoring.hbonds import HBondSet, fill_hbond_set
-from pyrosetta.rosetta.core.select.residue_selector import LayerSelector
+
+# The following packages are not pip-installable
+# The import calls are wrapped in a try/except block
+try:
+    import pyrosetta
+    from pyrosetta.bindings.utility import bind_method
+    from pyrosetta.rosetta.core.scoring.hbonds import HBondSet, fill_hbond_set
+    from pyrosetta.rosetta.core.select.residue_selector import LayerSelector
+except ImportError:
+    print('Module "pyrosetta" not found in the current environment! '
+          'Go to http://www.pyrosetta.org to download it.')
+    pass
+
+try:
+    import rif
+    import rif.geom.ray_hash as rh
+except ImportError:
+    print('Module "rif" not found in the current environment! '
+          'Go to https://github.com/willsheffler/rif for more information.')
+    pass
 
 logging.basicConfig(level=logging.WARN)
 
