@@ -1,5 +1,5 @@
-Welcome to Privileged Residues's documentation!
-======================================
+Privileged Residues Documentation
+=================================
 
 Contents:
 

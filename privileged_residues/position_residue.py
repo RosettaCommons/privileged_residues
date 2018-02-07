@@ -1,15 +1,29 @@
 # this script will be how I load and search hash tables
 import argparse
-import hbond_ray_pairs
 import numpy as np
-import process_networks
 import pickle
-import pyrosetta
 import sys
 
 from collections import namedtuple
-from rif.hash import *
 from os import path
+
+# The following packages are not pip-installable
+# The import calls are wrapped in a try/except block
+try:
+    import pyrosetta
+except ImportError:
+    print('Module "pyrosetta" not found in the current environment! '
+          'Go to http://www.pyrosetta.org to download it.')
+    pass
+
+try:
+    from rif.hash import *
+except ImportError:
+    print('Module "rif" not found in the current environment! '
+          'Go to https://github.com/willsheffler/rif for more information.')
+    pass
+
+from . import hbond_ray_pairs, process_networks
 
 HashTableData = namedtuple('HashTableData', ['type', 'cart_resl', 'ori_resl',
                                              'cart_bound'])
@@ -27,7 +41,7 @@ def _fname_to_HTD(fname_string):
 
     Returns:
         HashTableData: A nameedtuple populated with the information
-            encoded in `fname_string`.
+        encoded in `fname_string`.
     """
     c = path.splitext(path.basename(fname_string))[0].split('_')
     assert(len(c) == 5)
@@ -50,7 +64,7 @@ def get_ht_from_table(bin, cart_resl, ori_resl, cart_bound):
 
     Returns:
         numpy.array: A (4, 4) array representing the homogenous
-            transform at the center of the bin.
+        transform at the center of the bin.
     """
     # these are kind of magic numbers
     # is this thing expensive to instantiate? I could move stuff around to make

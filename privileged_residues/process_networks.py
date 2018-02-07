@@ -1,41 +1,63 @@
 import argparse
-import hbond_ray_pairs
 import numpy as np
-import rif
 import sys
 import pickle
-import pyrosetta
 
 from collections import namedtuple, OrderedDict
 from itertools import permutations
 from more_itertools import chunked
 from os import makedirs, path
-from rif.hash import *
 
+# The following packages are not pip-installable
+# The import calls are wrapped in a try/except block
+try:
+    import pyrosetta
+except ImportError:
+    print('Module "pyrosetta" not found in the current environment! '
+          'Go to http://www.pyrosetta.org to download it.')
+    pass
+
+try:
+    import rif
+    from rif.hash import *
+except ImportError:
+    print('Module "rif" not found in the current environment! '
+          'Go to https://github.com/willsheffler/rif for more information.')
+    pass
+
+from . import hbond_ray_pairs
 
 # the order of the keys of this dictionary
 FxnlGrp = namedtuple('FxnlGrp', ['resName', 'donor', 'acceptor', 'atoms'])
 fxnl_groups = OrderedDict(sorted({'OH_': FxnlGrp('hydroxide', True, True,
-                                                ['CV', 'OH', 'HH']),
-                                 'G__': FxnlGrp('guanidium', True, False,
-                                                ['CZ', 'NH1', 'NH2']),
-                                 'I__': FxnlGrp('imidazole', True, True,
-                                                ['ND1', 'CD2', 'NE2']),
-                                 # imidazole tautomer
-                                 'ID_': FxnlGrp('imidazole_D', True, True,
-                                                ['ND1', 'CD2', 'NE2']),
-                                 'A__': FxnlGrp('amine', True, False,
-                                                ['NZ', '1HZ', '2HZ']),
-                                 'C__': FxnlGrp('carboxylate', False, True,
-                                                ['CD', 'OE1', 'OE2']),
-                                 'CA_': FxnlGrp('carboxamide', True, True,
-                                                ['CG', 'OD1', 'ND2']),
-                                 }.items(), key=lambda t: t[0]))
+                                                 ['CV', 'OH', 'HH']),
+                                  'G__': FxnlGrp('guanidium', True, False,
+                                                 ['CZ', 'NH1', 'NH2']),
+                                  'I__': FxnlGrp('imidazole', True, True,
+                                                 ['ND1', 'CD2', 'NE2']),
+                                  # imidazole tautomer
+                                  'ID_': FxnlGrp('imidazole_D', True, True,
+                                                 ['ND1', 'CD2', 'NE2']),
+                                  'A__': FxnlGrp('amine', True, False,
+                                                 ['NZ', '1HZ', '2HZ']),
+                                  'C__': FxnlGrp('carboxylate', False, True,
+                                                 ['CD', 'OE1', 'OE2']),
+                                  'CA_': FxnlGrp('carboxamide', True, True,
+                                                 ['CG', 'OD1', 'ND2']),
+                                  }.items(), key=lambda t: t[0]))
 
 interaction_types = ['acceptor_acceptor', 'acceptor_donor', 'donor_acceptor',
                      'donor_donor']
 
 Interaction = namedtuple('Interaction', ['pos', 'partner'])
+Interaction.__doc__ = """Store a pair of interacting residues by
+sequence position.
+
+Attributes:
+    pos (int): The sequence position of the positioned residue.
+    partner (int): The sequence position of the stationary residue
+        forming an interaction with the positioned residue.
+"""
 AtomIDPair = namedtuple('AtomIDPair', ['center', 'base'])
 
 
@@ -45,16 +67,17 @@ def get_models_from_file(fname):
 
     Notes:
         ATOM records are represented by a fixed-width format described
-        here:
-        http://www.wwpdb.org/documentation/file-format-content/format33
-        /sect9.html#ATOM
+        here_.
+
+        .. _here: http://www.wwpdb.org/documentation/\
+        file-format-content/format33/sect9.html#ATOM
 
     Args:
         fname (str): The name of a PDB-formatted file.
 
     Returns:
         list: A list of lists of ATOM records that represent the
-            models.
+        models.
     """
     with open(fname, 'r') as f:
         atom_records = [l.rstrip() for l in f.readlines()]
@@ -79,9 +102,10 @@ def pose_from_atom_records(atom_recs):
 
     Notes:
         ATOM records are represented by a fixed-width format described
-        here:
-        http://www.wwpdb.org/documentation/file-format-content/format33
-        /sect9.html#ATOM
+        here_.
+
+        .. _here: http://www.wwpdb.org/documentation/\
+        file-format-content/format33/sect9.html#ATOM
 
     Args:
         atom_recs (list): A list of ATOM records (str) describing a
@@ -90,7 +114,7 @@ def pose_from_atom_records(atom_recs):
 
     Returns:
         pyrosetta.Pose: The Pose containing the information in the ATOM
-            records.
+        records.
     """
     p = pyrosetta.Pose()
 
@@ -136,8 +160,8 @@ def rays_for_interaction(donor, acceptor, interaction):
 
     Returns:
         tuple: A tuple of rays represented as (2, 4) numpy.arrays
-            describing the stationary and positioned residues,
-            respectively.
+        describing the stationary and positioned residues,
+        respectively.
     """
     from pyrosetta.rosetta.core.id import AtomID
 
