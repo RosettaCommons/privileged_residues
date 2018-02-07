@@ -18,7 +18,7 @@ deploy:
       cE0zT3lZTytsYXI5V2lWZWhsdzBkUUpUV0tOWlNtNVRwNzM5dG1FalVUN2R2aFpOcFhMbWtwbW5V
       VzNZT242Mk5taVFla3pkOXlCQ2lBMlFNL3pMK1JZK3dtVW5BOWJuSzdKYlBMeFVBNGJseS9PTnc9
   true:
-    python: 2.7
+    python: 3.6
     repo: weitzner/privileged_residues
     tags: true
 install: pip install -U tox-travis
@@ -26,7 +26,4 @@ language: python
 python:
 - 3.6
 - 3.5
-- 3.4
-- 3.3
-- 2.7
 script: tox
