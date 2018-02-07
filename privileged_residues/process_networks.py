@@ -53,7 +53,7 @@ Interaction = namedtuple('Interaction', ['pos', 'partner'])
 Interaction.__doc__ = """Store a pair of interacting residues by
 sequence position.
 
-Fields:
+Attributes:
     pos (int): The sequence position of the positioned residue.
     partner (int): The sequence position of the stationary residue
         forming an interaction with the positioned residue.
