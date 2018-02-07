@@ -12,9 +12,11 @@ try:
     from pyrosetta.bindings.utility import bind_method
     from pyrosetta.rosetta.core.scoring.hbonds import HBondSet, fill_hbond_set
     from pyrosetta.rosetta.core.select.residue_selector import LayerSelector
+    HAVE_PYROSETTA = True
 except ImportError:
     print('Module "pyrosetta" not found in the current environment! '
           'Go to http://www.pyrosetta.org to download it.')
+        HAVE_PYROSETTA = False
     pass
 
 try:
@@ -28,24 +30,25 @@ except ImportError:
 logging.basicConfig(level=logging.WARN)
 
 
-@bind_method(pyrosetta.rosetta.numeric.xyzVector_double_t)
-def __iter__(self):
-    """Generator for pyrosetta.rosetta.numeric.xyzVector_double_t
-    instances. Makes casting directly to numpy.array possible.
+if HAVE_PYROSETTA:
+    @bind_method(pyrosetta.rosetta.numeric.xyzVector_double_t)
+    def __iter__(self):
+        """Generator for pyrosetta.rosetta.numeric.xyzVector_double_t
+        instances. Makes casting directly to numpy.array possible.
 
-    Yields:
-        float: The next coordinate value in the vector in the order x,
-            y, z.
+        Yields:
+            float: The next coordinate value in the vector in the order
+                x, y, z.
 
-    Examples:
-        >>> print([i for i in pose.residue(1).xyz(1)])
-        [13.092, 4.473, -2.599]
+        Examples:
+            >>> print([i for i in pose.residue(1).xyz(1)])
+            [13.092, 4.473, -2.599]
 
-        >>> np.array([*pose.residue(1).xyz(1)])
-        array([ 13.092,   4.473,  -2.599])
-    """
-    for value in [self.x, self.y, self.z]:
-        yield value
+            >>> np.array([*pose.residue(1).xyz(1)])
+            array([ 13.092,   4.473,  -2.599])
+        """
+        for value in [self.x, self.y, self.z]:
+            yield value
 
 
 def find_hbonds(p, derivatives=False, exclude_bb=True, exclude_bsc=True,
