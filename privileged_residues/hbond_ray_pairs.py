@@ -16,7 +16,7 @@ try:
 except ImportError:
     print('Module "pyrosetta" not found in the current environment! '
           'Go to http://www.pyrosetta.org to download it.')
-        HAVE_PYROSETTA = False
+    HAVE_PYROSETTA = False
     pass
 
 try:
