@@ -11,5 +11,5 @@ PyYAML==3.12
 pytest==3.4.0
 pytest-runner==3.0
 numpy==1.14.0
-more_itertools
+more_itertools==4.1.0
 docutils<0.13.1
