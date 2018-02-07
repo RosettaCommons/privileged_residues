@@ -50,6 +50,14 @@ interaction_types = ['acceptor_acceptor', 'acceptor_donor', 'donor_acceptor',
                      'donor_donor']
 
 Interaction = namedtuple('Interaction', ['pos', 'partner'])
+Interaction.__doc__ = """Store a pair of interacting residues by
+sequence position.
+
+Fields:
+    pos (int): The sequence position of the positioned residue.
+    partner (int): The sequence position of the stationary residue
+        forming an interaction with the positioned residue.
+"""
 AtomIDPair = namedtuple('AtomIDPair', ['center', 'base'])
 
 
