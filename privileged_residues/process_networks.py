@@ -1,6 +1,5 @@
 import argparse
 import numpy as np
-import rif
 import sys
 import pickle
 
@@ -19,6 +18,7 @@ except ImportError:
     pass
 
 try:
+    import rif
     from rif.hash import *
 except ImportError:
     print('Module "rif" not found in the current environment! '
