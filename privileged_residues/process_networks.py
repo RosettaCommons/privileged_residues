@@ -16,21 +16,21 @@ from privileged_residues import hbond_ray_pairs
 # the order of the keys of this dictionary
 FxnlGrp = namedtuple('FxnlGrp', ['resName', 'donor', 'acceptor', 'atoms'])
 fxnl_groups = OrderedDict(sorted({'OH_': FxnlGrp('hydroxide', True, True,
-                                                ['CV', 'OH', 'HH']),
-                                 'G__': FxnlGrp('guanidium', True, False,
-                                                ['CZ', 'NH1', 'NH2']),
-                                 'I__': FxnlGrp('imidazole', True, True,
-                                                ['ND1', 'CD2', 'NE2']),
-                                 # imidazole tautomer
-                                 'ID_': FxnlGrp('imidazole_D', True, True,
-                                                ['ND1', 'CD2', 'NE2']),
-                                 'A__': FxnlGrp('amine', True, False,
-                                                ['NZ', '1HZ', '2HZ']),
-                                 'C__': FxnlGrp('carboxylate', False, True,
-                                                ['CD', 'OE1', 'OE2']),
-                                 'CA_': FxnlGrp('carboxamide', True, True,
-                                                ['CG', 'OD1', 'ND2']),
-                                 }.items(), key=lambda t: t[0]))
+                                                 ['CV', 'OH', 'HH']),
+                                  'G__': FxnlGrp('guanidium', True, False,
+                                                 ['CZ', 'NH1', 'NH2']),
+                                  'I__': FxnlGrp('imidazole', True, True,
+                                                 ['ND1', 'CD2', 'NE2']),
+                                  # imidazole tautomer
+                                  'ID_': FxnlGrp('imidazole_D', True, True,
+                                                 ['ND1', 'CD2', 'NE2']),
+                                  'A__': FxnlGrp('amine', True, False,
+                                                 ['NZ', '1HZ', '2HZ']),
+                                  'C__': FxnlGrp('carboxylate', False, True,
+                                                 ['CD', 'OE1', 'OE2']),
+                                  'CA_': FxnlGrp('carboxamide', True, True,
+                                                 ['CG', 'OD1', 'ND2']),
+                                  }.items(), key=lambda t: t[0]))
 
 interaction_types = ['acceptor_acceptor', 'acceptor_donor', 'donor_acceptor',
                      'donor_donor']
