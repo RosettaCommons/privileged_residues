@@ -6,6 +6,7 @@ import pickle
 from collections import namedtuple, OrderedDict
 from itertools import permutations
 from more_itertools import chunked
+from numpy.testing import assert_allclose
 from os import makedirs, path
 
 # The following packages are not pip-installable
@@ -29,6 +30,8 @@ from . import hbond_ray_pairs
 
 # the order of the keys of this dictionary
 FxnlGrp = namedtuple('FxnlGrp', ['resName', 'donor', 'acceptor', 'atoms'])
+FxnlGrp.__doc__ = """
+"""
 fxnl_groups = OrderedDict(sorted({'OH_': FxnlGrp('hydroxide', True, True,
                                                  ['CV', 'OH', 'HH']),
                                   'G__': FxnlGrp('guanidium', True, False,
@@ -58,8 +61,10 @@ Attributes:
     partner (int): The sequence position of the stationary residue
         forming an interaction with the positioned residue.
 """
-AtomIDPair = namedtuple('AtomIDPair', ['center', 'base'])
 
+AtomIDPair = namedtuple('AtomIDPair', ['center', 'base'])
+AtomIDPair.__doc__ = """
+"""
 
 def get_models_from_file(fname):
     """Read a PDB-formatted file and return a list of ATOM records
@@ -241,27 +246,27 @@ def find_all_relevant_hbonds_for_pose(p, hash_types):
         rp = None
         ht = []
         for i, interaction in enumerate(interactions):
-            pos_rsd = p.residue(interaction.pos)
+            pos_rsd = p.residues[interaction.pos]
             pos_fxnl_grp = fxnl_groups[pos_rsd.name3()]
-            par_fxnl_grp = fxnl_groups[p.residue(interaction.partner).name3()]
+            par_fxnl_grp = fxnl_groups[p.residues[interaction.partner].name3()]
 
             if pos_fxnl_grp is None:
-                print(p.residue(interaction.pos))
+                print(p.residues[interaction.pos])
 
             if par_fxnl_grp is None:
-                print(p.residue(interaction.partner))
+                print(p.residues[interaction.partner])
 
             # determine which residue is the donor and which is the acceptor
             res_nos = (interaction.pos, interaction.partner)
             if (par_fxnl_grp.donor and not par_fxnl_grp.acceptor) or \
                (pos_fxnl_grp.acceptor and not pos_fxnl_grp.donor):
                 assert(pos_fxnl_grp.acceptor and par_fxnl_grp.donor)
-                acceptor, donor = (p.residue(i) for i in res_nos)
+                acceptor, donor = (p.residues[i] for i in res_nos)
                 ht.append('donor')
             elif (par_fxnl_grp.acceptor and not par_fxnl_grp.donor) or \
                  (pos_fxnl_grp.donor and not pos_fxnl_grp.acceptor):
                 assert(pos_fxnl_grp.donor and par_fxnl_grp.acceptor)
-                donor, acceptor = (p.residue(i) for i in res_nos)
+                donor, acceptor = (p.residues[i] for i in res_nos)
                 ht.append('acceptor')
             else:
                 print('Ambiguous arrangement: both can donate & accept!')
@@ -280,7 +285,7 @@ def find_all_relevant_hbonds_for_pose(p, hash_types):
         c = [np.array([*pos_rsd.xyz(atom)]) for atom in pos_fxnl_grp.atoms]
         pos_frame = hbond_ray_pairs.get_frame_for_coords(np.stack(c))
         frame_to_store = np.dot(np.linalg.inv(ray_frame), pos_frame)
-        assert(np.allclose(pos_frame, np.dot(ray_frame, frame_to_store)))
+        assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store))
 
         # store a tuple of the Rays and the positioning information.
         # pop first and second upon constructing entry to prepare for the

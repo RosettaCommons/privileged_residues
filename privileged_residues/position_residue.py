@@ -27,6 +27,8 @@ from . import hbond_ray_pairs, process_networks
 
 HashTableData = namedtuple('HashTableData', ['type', 'cart_resl', 'ori_resl',
                                              'cart_bound'])
+HashTableData.__doc__ = """
+"""
 
 
 def _fname_to_HTD(fname_string):
@@ -85,18 +87,18 @@ def tranform_pose(p, xform):
     """
     coords = []
     for i in range(1, p.size() + 1):
-        for j in range(1, p.residue(i).natoms() + 1):
+        for j in range(1, p.residues[i].natoms() + 1):
             c = np.ones(4)
-            c[:3] = np.array([*p.residue(i).xyz(j)])
+            c[:3] = np.array([*p.residues[i].xyz(j)])
             coords.append(c)
 
     new_coords = np.dot(xform, np.stack(coords).T)
     from pyrosetta.rosetta.numeric import xyzVector_double_t as xyzVec
     tot_atoms = 0
     for i in range(1, p.size() + 1):
-        for j in range(1, p.residue(i).natoms() + 1):
+        for j in range(1, p.residues[i].natoms() + 1):
             x, y, z = tuple(c for c in new_coords[:3, tot_atoms])
-            p.residue(i).atom(j).xyz(xyzVec(x, y, z))
+            p.residues[i].atom(j).xyz(xyzVec(x, y, z))
             tot_atoms += 1
 
 
@@ -144,7 +146,7 @@ def main(argv):
     pos_grp = process_networks.fxnl_groups[rsd]
     p = pyrosetta.Pose()
     pyrosetta.make_pose_from_sequence(p, 'Z[{}]'.format(rsd), 'fa_standard')
-    coords = [np.array([*p.residue(1).xyz(atom)]) for atom in pos_grp.atoms]
+    coords = [np.array([*p.residues[1].xyz(atom)]) for atom in pos_grp.atoms]
     c = np.stack(coords)
     pos_frame = np.linalg.inv(hbond_ray_pairs.get_frame_for_coords(c))
 

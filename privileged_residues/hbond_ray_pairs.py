@@ -4,6 +4,8 @@ import numpy as np
 import sys
 
 from collections import namedtuple
+from numpy.testing import assert_allclose
+
 
 # The following packages are not pip-installable
 # The import calls are wrapped in a try/except block
@@ -41,10 +43,10 @@ if HAVE_PYROSETTA:
                 x, y, z.
 
         Examples:
-            >>> print([i for i in pose.residue(1).xyz(1)])
+            >>> print([i for i in pose.residues[1].xyz(1)])
             [13.092, 4.473, -2.599]
 
-            >>> np.array([*pose.residue(1).xyz(1)])
+            >>> np.array([*pose.residues[1].xyz(1)])
             array([ 13.092,   4.473,  -2.599])
         """
         for value in [self.x, self.y, self.z]:
@@ -204,9 +206,9 @@ def find_ray_pair_for_residues(don_rsd, acc_rsd):
 
     HbondOverlap = namedtuple('HbondOverlap', ['projection', 'vector'])
     candidate_dirs = list()
-    for orbital_id in pose.residue(hb.acc_res()).bonded_orbitals(hb.acc_atm()):
+    for orbital_id in pose.residues[hb.acc_res()].bonded_orbitals(hb.acc_atm()):
         orb_coord = np.array(
-                    [*pose.residue(hb.acc_res()).orbital_xyz(orbital_id)])
+                    [*pose.residues[hb.acc_res()].orbital_xyz(orbital_id)])
         orb_dir = orb_coord - acc_heavy
         orb_dir /= np.linalg.norm(orb_dir)
         candidate_dirs.append(HbondOverlap(np.dot(orb_dir, hbond_dir),
@@ -237,16 +239,16 @@ def find_ray_pair_for_hbond(pose, hb):
         describes the donor, the second describes the acceptor.
     """
     # donor
-    don_heavy_atm_id = pose.residue(hb.don_res()).atom_base(hb.don_hatm())
-    hydrogen = np.array([*pose.residue(hb.don_res()).xyz(hb.don_hatm())])
-    don_heavy = np.array([*pose.residue(hb.don_res()).xyz(don_heavy_atm_id)])
+    don_heavy_atm_id = pose.residues[hb.don_res()].atom_base(hb.don_hatm())
+    hydrogen = np.array([*pose.residues[hb.don_res()].xyz(hb.don_hatm())])
+    don_heavy = np.array([*pose.residues[hb.don_res()].xyz(don_heavy_atm_id)])
 
     hb_don_ray = create_ray(hydrogen, don_heavy)
 
     # acceptor
-    acc_heavy = np.array([*pose.residue(hb.acc_res()).xyz(hb.acc_atm())])
-    acc_base_atm_no = pose.residue(hb.acc_res()).atom_base(hb.acc_atm())
-    acc_base = np.array([*pose.residue(hb.acc_res()).xyz(acc_base_atm_no)])
+    acc_heavy = np.array([*pose.residues[hb.acc_res()].xyz(hb.acc_atm())])
+    acc_base_atm_no = pose.residues[hb.acc_res()].atom_base(hb.acc_atm())
+    acc_base = np.array([*pose.residues[hb.acc_res()].xyz(acc_base_atm_no)])
 
     hb_acc_ray = create_ray(acc_heavy, acc_base)
 
@@ -313,13 +315,14 @@ def get_frame_for_coords(coords):
     y_hat = coords[0] - coords[1]
     y_hat -= np.dot(y_hat, z_hat) * z_hat
     y_hat /= np.linalg.norm(y_hat)
-    assert(np.isclose(np.dot(y_hat, z_hat), 0.))
+    assert_allclose(np.dot(y_hat, z_hat), 0.)
+
     frame[:3, 1] = y_hat
 
     x_hat = np.cross(y_hat, z_hat)
-    assert(np.isclose(np.linalg.norm(x_hat), 1.))
+    assert_allclose(np.linalg.norm(x_hat), 1.)
     frame[:3, 0] = x_hat
-    assert(np.isclose(np.linalg.det(frame[..., :3, :3]), 1.))
+    assert_allclose(np.linalg.det(frame[..., :3, :3]), 1.)
 
     return frame
 
@@ -346,7 +349,7 @@ def get_frame_for_rays(r1, r2):
     """
     trans = r1[0]
     x_hat = r1[1]
-    assert(np.isclose(np.linalg.norm(x_hat), 1.))  # make sure this is unity
+    assert_allclose(np.linalg.norm(x_hat), 1.)  # make sure this is unity
 
     xy_pojnt = r2[0] - trans
     y_component = xy_pojnt - (np.dot(xy_pojnt, x_hat) * x_hat)
@@ -354,7 +357,7 @@ def get_frame_for_rays(r1, r2):
 
     z_hat = np.zeros(len(x_hat))
     z_hat[:-1] = np.cross(x_hat[:-1], y_hat[:-1])  # right-handed system
-    assert(np.isclose(np.linalg.norm(z_hat), 1.))  # sanity check
+    assert_allclose(np.linalg.norm(z_hat), 1.)  # sanity check
 
     # construct frame
     return np.column_stack((x_hat, y_hat, z_hat, trans))
