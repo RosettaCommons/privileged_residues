@@ -1,11 +1,7 @@
-import argparse
-import logging
 import numpy as np
-import sys
 
 from collections import namedtuple
 from numpy.testing import assert_allclose
-
 
 # The following packages are not pip-installable
 # The import calls are wrapped in a try/except block
@@ -28,8 +24,6 @@ except ImportError:
     print('Module "rif" not found in the current environment! '
           'Go to https://github.com/willsheffler/rif for more information.')
     pass
-
-logging.basicConfig(level=logging.WARN)
 
 
 if HAVE_PYROSETTA:
@@ -206,9 +200,9 @@ def find_ray_pair_for_residues(don_rsd, acc_rsd):
 
     HbondOverlap = namedtuple('HbondOverlap', ['projection', 'vector'])
     candidate_dirs = list()
-    for orbital_id in pose.residues[hb.acc_res()].bonded_orbitals(hb.acc_atm()):
+    for orb_id in pose.residues[hb.acc_res()].bonded_orbitals(hb.acc_atm()):
         orb_coord = np.array(
-                    [*pose.residues[hb.acc_res()].orbital_xyz(orbital_id)])
+                    [*pose.residues[hb.acc_res()].orbital_xyz(orb_id)])
         orb_dir = orb_coord - acc_heavy
         orb_dir /= np.linalg.norm(orb_dir)
         candidate_dirs.append(HbondOverlap(np.dot(orb_dir, hbond_dir),
@@ -363,28 +357,5 @@ def get_frame_for_rays(r1, r2):
     return np.column_stack((x_hat, y_hat, z_hat, trans))
 
 
-def main(argv):
-    """
-    """
-    opts = ['-add_orbitals']
-    target_fname = '../DHR10_133144_1.pdb'  # test!
-
-    pyrosetta.init(extra_options=' '.join(opts),
-                   set_logging_handler='interactive')
-    p = pyrosetta.pose_from_file(target_fname)
-    hbset = find_hbonds(p)
-    surf_hbset = identify_bonded_pairs(p, hbset)
-
-    # make a list of the rays and then concatenate them with np.stack()
-    donors = []
-    acceptors = []
-    for hbond in surf_hbset.hbonds():
-        don_ray, acc_ray = find_ray_pair_for_hbond(p, hbond)
-        donors.append(don_ray)
-        acceptors.append(acc_ray)
-
-    hash_rays(np.stack(donors), np.stack(acceptors))
-
-
 if __name__ == '__main__':
-    main(sys.argv)
+    print('Don\'t execute me, bruh.')

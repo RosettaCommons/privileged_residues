@@ -1,13 +1,10 @@
-import argparse
 import numpy as np
 import sys
-import pickle
 
 from collections import namedtuple, OrderedDict
 from itertools import permutations
 from more_itertools import chunked
 from numpy.testing import assert_allclose
-from os import makedirs, path
 
 # The following packages are not pip-installable
 # The import calls are wrapped in a try/except block
@@ -65,6 +62,7 @@ Attributes:
 AtomIDPair = namedtuple('AtomIDPair', ['center', 'base'])
 AtomIDPair.__doc__ = """
 """
+
 
 def get_models_from_file(fname):
     """Read a PDB-formatted file and return a list of ATOM records
@@ -334,44 +332,5 @@ def hash_full(full_array, cart_resl=0.1, ori_resl=2., cart_bound=16.):
     return result
 
 
-def main(argv):
-    """
-    """
-    # TODO: use argparse to set these variables
-    # TODO: adapt this script so all arrangements are searched in a single
-    # execution. This will ensure that the groupings are appropriate
-    fn = 'arrangements/imidazole_carboxylate_guanidinium/functional_stubs.pdb'
-    dir = 'functional_groups'
-    out_dir = 'hash_tables'
-    cart_resl, ori_resl, cart_bound = 0.1, 2., 16.
-
-    assert(path.isfile(fn))
-    if not path.exists(out_dir):
-        makedirs(out_dir)
-
-    params_files_list = [path.join(dir, t.resName) + '.params' for _, t in
-                         fxnl_groups.items()]
-
-    opts = ['-ignore_waters false', '-mute core',
-            '-extra_res_fa {}'.format(' '.join(params_files_list))]
-    pyrosetta.init(extra_options=' '.join(opts),
-                   set_logging_handler=None)
-
-    hash_types = []
-    for pose in poses_for_all_models(fn):
-        hash_types = find_all_relevant_hbonds_for_pose(pose, hash_types)
-
-    ht = hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
-
-    for i, interaction_type in enumerate(interaction_types):
-        t = ht[np.isin(ht['it'], [i])]
-        out_fname = '_'.join([interaction_type, str(cart_resl), str(ori_resl),
-                              str(cart_bound)]) + '.pkl'
-
-        with open(path.join(out_dir, out_fname), 'wb') as f:
-            pickle.dump({k: v for k, v in zip(t['key'],
-                                              t[['id', 'hashed_ht']])}, f)
-
-
 if __name__ == '__main__':
-    main(sys.argv)
+    print('Don\'t execute me, bruh.')
