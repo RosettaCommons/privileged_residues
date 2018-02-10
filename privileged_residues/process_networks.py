@@ -1,5 +1,4 @@
 import numpy as np
-import sys
 
 from collections import namedtuple, OrderedDict
 from itertools import permutations
@@ -27,8 +26,21 @@ from . import hbond_ray_pairs
 
 # the order of the keys of this dictionary
 FxnlGrp = namedtuple('FxnlGrp', ['resName', 'donor', 'acceptor', 'atoms'])
-FxnlGrp.__doc__ = """
+FxnlGrp.__doc__ = """Store hydrogen bonding information about a
+functional group as well as information that can be used to position it
+in three-space.
+
+Attributes:
+    resName (str): Name of the functional group.
+    donor (bool): True if the functional group can be a donor in a
+        hydrogen bond.
+    acceptor (bool): True if the functional group can be an acceptor in
+        a hydrogen bond.
+    atoms (list): A list of three atom names (str) that are used to
+        construct a coordinate frame to describe the position of the
+        functional group in space.
 """
+
 fxnl_groups = OrderedDict(sorted({'OH_': FxnlGrp('hydroxide', True, True,
                                                  ['CV', 'OH', 'HH']),
                                   'G__': FxnlGrp('guanidium', True, False,
@@ -60,7 +72,19 @@ Attributes:
 """
 
 AtomIDPair = namedtuple('AtomIDPair', ['center', 'base'])
-AtomIDPair.__doc__ = """
+AtomIDPair.__doc__ = """Store a pair AtomIDs that can be used to
+construct a ray in space to describe a particular geometry.
+
+Notes:
+    This type is used to construct rays that are centered at the
+    `center` residue and have unit length in the `base`-`center`
+    direction.
+
+Attributes:
+    center (pyrosetta.rosetta.core.id.AtomID): The atom on which to
+        center a ray.
+    base (pyrosetta.rosetta.core.id.AtomID): The atom used to define
+        the direction of the ray.
 """
 
 
@@ -127,39 +151,48 @@ def pose_from_atom_records(atom_recs):
 
 
 def poses_for_all_models(fname):
-    """
+    """Generate a Pose for each model in a PDB-formatted file. Models
+    are separated by an 'ENDMDL' entry in the file.
 
     Args:
-        fname (str):
+        fname (str): The name of a PDB-formatted file.
 
     Yields:
-        pyrosetta.Pose:
+        pyrosetta.Pose: The Pose representing the next model in the
+        file.
     """
     for model in get_models_from_file(fname):
         yield pose_from_atom_records(model)
 
 
 def generate_combinations(n):
-    """
+    """Generate a tuple of Interactions the describes the connectivity
+    of a closed network of residues.
 
     Args:
-        n (int):
+        n (int): The number of residues in the network.
 
     Yields:
-        tuple:
+        tuple: The Interaction instances that describe the
+        connectivity of a network.
     """
     # this ensures everything is in a usable order
-    for i, j in chunked(permutations(range(1, n + 1), 2), 2):
-        yield Interaction(*i), Interaction(*j)
+    for i in chunked(permutations(range(1, n + 1), 2), n - 1):
+        yield (Interaction(*j) for j in i)
 
 
 def rays_for_interaction(donor, acceptor, interaction):
-    """
+    """Create a pair of rays describing a hydrogen and return them as a
+    tuple.
 
     Args:
-        donor (pyrosetta.rosetta.core.conformation.Residue):
-        acceptor (pyrosetta.rosetta.core.conformation.Residue):
-        interaction (Interaction):
+        donor (pyrosetta.rosetta.core.conformation.Residue): The
+            residue containing the hydrogen bond donor.
+        acceptor (pyrosetta.rosetta.core.conformation.Residue): The
+            residue containing the hydrogen bond acceptor.
+        interaction (Interaction): The interaction that describes which
+            residue is stationary and which is psitioned by the
+            interaction.
 
     Returns:
         tuple: A tuple of rays represented as (2, 4) numpy.arrays
@@ -212,18 +245,30 @@ def rays_for_interaction(donor, acceptor, interaction):
     return target, positioned_residue
 
 
-def find_all_relevant_hbonds_for_pose(p, hash_types):
-    """
+def find_all_relevant_hbonds_for_pose(p):
+    """Enumerate all possible arrangements of residues in a Pose of a
+    closed hydrogen-bonded network of residues, pack the arrangment
+    into a numpy.array with enough information to reconstruct the
+    arrangement and return the arrays as a list.
 
     Notes:
-        Something about the dtype here.
+        The resulting numpy.arrays have a custom dtype with the
+        following fields:
+
+        1. it: The interation type.
+        2. r1: Ray 1
+        3. r2: Ray 2
+        4. id: The identifier of the functional group positioned by
+           this interaction.
+        5. ht: The homogenous transform that describes the orientation
+           of the positioned residue relative to the stationary residues.
 
     Args:
-        p (pyrosetta.Pose):
-        hash_types (list):
+        p (pyrosetta.Pose): The Pose to examine.
 
     Returns:
-        list:
+        list: A list of numpy.arrays that each represent a network
+        configuration.
     """
     # ah, at last. this is where it gets a little tricky.
     # everything should be connected to everything else...
@@ -236,9 +281,9 @@ def find_all_relevant_hbonds_for_pose(p, hash_types):
 
     first = []
     second = []
+    hash_types = []
 
     fxnl_grps = list(fxnl_groups.keys())
-
     for interactions in res_orderings:
         # look at the order, figure out which hydrogen bonds to use
         rp = None
@@ -270,6 +315,7 @@ def find_all_relevant_hbonds_for_pose(p, hash_types):
                 print('Ambiguous arrangement: both can donate & accept!')
                 print('Trying something a little more complicated...')
                 print('Oh shit, I should probably implement this!')
+                import sys
                 sys.exit(1)
 
             target, pos = rays_for_interaction(donor, acceptor, interaction)
@@ -298,19 +344,34 @@ def find_all_relevant_hbonds_for_pose(p, hash_types):
 
 
 def hash_full(full_array, cart_resl=0.1, ori_resl=2., cart_bound=16.):
-    """
+    """Hash an input numpy.array with a structured dtype and return a
+    new array.
 
     Notes:
-        Something about the dtype here.
+        The input nump.array (full_array) is expected to have been
+        generated by `find_all_relevant_hbonds_for_pose`. To prepare
+        the array for this function, use `np.stack(list_of_arrays)`.
+
+        The resulting numpy.array have a custom dtype with the
+        following fields:
+
+        1. it: The interation type.
+        2. key: The hash of two rays in space.
+        3. id: The identifier of the functional group positioned by
+           this interaction.
+        4. hashed_ht: The hash of a homogenous transform.
 
     Args:
-        full_array (np.array):
-        cart_resl (float):
-        ori_resl (float):
-        cart_bound (float):
+        full_array (np.array): The full array of network
+            configurations.
+        cart_resl (float): The cartesian resolution of the BCC lattice
+        ori_resl (float): The orientational resolution of the BCC
+            lattice. In general, ori_resl should be roughly
+            20 * cart_resl.
+        cart_bound (float): The bounds of the lattice.
 
     Returns:
-        np.array:
+        np.array: The hased form of the input array.
     """
     # these are kind of magic numbers
     # together they define the grid universe in which we are living

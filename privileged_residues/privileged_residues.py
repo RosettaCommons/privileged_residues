@@ -13,6 +13,8 @@ except ImportError:
     HAVE_PYROSETTA = False
     pass
 
+from os import path
+_dir = path.join(path.dirname(__file__), '..', 'data', 'functional_groups')
 
 logging.basicConfig(level=logging.WARN)
 _logging_handler = 'interactive'
@@ -43,8 +45,19 @@ def hash_ray_pairs_from_pdb_file(argv):
     hrp.hash_rays(np.stack(donors), np.stack(acceptors))
 
 
-def hash_networks_and_write_to_file(argv):
+def hash_networks_and_write_to_file(fname, out_dir, cart_resl=.1, ori_resl=2.,
+                                    cart_bound=16.):
     """
+
+    Args:
+        fname (str):
+        out_dir (str):
+        cart_resl (float): The cartesian resolution of the BCC lattice.
+            Defaults to 0.1.
+        ori_resl (float): The orientational resolution of the BCC
+            lattice. In general, ori_resl should be roughly
+            20 * cart_resl. Defaults to 2.0.
+        cart_bound (float): The bounds of the lattice. Defaults to 16.
     """
     import numpy as np
     import pickle
@@ -53,16 +66,14 @@ def hash_networks_and_write_to_file(argv):
     # TODO: use argparse to set these variables
     # TODO: adapt this script so all arrangements are searched in a single
     # execution. This will ensure that the groupings are appropriate
-    fn = 'arrangements/imidazole_carboxylate_guanidinium/functional_stubs.pdb'
-    dir = 'functional_groups'
+    fname = 'arrangements/imidazole_carboxylate_guanidinium/functional_stubs.pdb'
     out_dir = 'hash_tables'
-    cart_resl, ori_resl, cart_bound = 0.1, 2., 16.
 
-    assert(path.isfile(fn))
+    assert(path.isfile(fname))
     if not path.exists(out_dir):
         makedirs(out_dir)
 
-    params_files_list = [path.join(dir, t.resName) + '.params' for _, t in
+    params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
                          pn.fxnl_groups.items()]
 
     opts = ['-ignore_waters false', '-mute core',
@@ -71,8 +82,8 @@ def hash_networks_and_write_to_file(argv):
                    set_logging_handler=_logging_handler)
 
     hash_types = []
-    for pose in pn.poses_for_all_models(fn):
-        hash_types = pn.find_all_relevant_hbonds_for_pose(pose, hash_types)
+    for pose in pn.poses_for_all_models(fname):
+        hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
 
     ht = pn.hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
 
@@ -86,7 +97,7 @@ def hash_networks_and_write_to_file(argv):
                                               t[['id', 'hashed_ht']])}, f)
 
 
-def main(argv):
+def laod_hash_tables_from_disk(fname=None):
     """Load the hash tables (pickled dictionaries) containing hydrogen
     bond ray pair hashes as keys and a functional group identifier and
     a bin number of Body Centered  Cubic (BCC) lattice corresponding to
@@ -94,6 +105,10 @@ def main(argv):
     to the hydrogen bonding rays as values. In its current state, this
     script selects an arbitrary item from the table and ensures that a
     functional group can be placed correctly.
+
+    Args:
+        fname (str):
+
     """
     import numpy as np
     import pickle
@@ -102,8 +117,7 @@ def main(argv):
     from . import position_residue as pr
 
     # setup per-use variables with argparse
-    dir = 'functional_groups'
-    params_files_list = [path.join(dir, t.resName) + '.params' for _, t in
+    params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
                          process_networks.fxnl_groups.items()]
 
     opts = ['-ignore_waters false', '-mute core',
