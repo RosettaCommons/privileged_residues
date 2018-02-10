@@ -9,7 +9,7 @@ Sphinx==1.6.7
 cryptography==2.1.4
 PyYAML==3.12
 pytest==3.4.0
-pytest-runner==3.0
+pytest-runner==4.0
 docutils==0.14
 numpy==1.14.0
 more_itertools==4.1.0
