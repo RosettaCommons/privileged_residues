@@ -14,7 +14,7 @@ except ImportError:
     pass
 
 from os import path
-_dir = path.join(path.dirname(__file__), '..', 'data', 'functional_groups')
+_dir = path.join(path.dirname(__file__), 'data', 'functional_groups')
 
 logging.basicConfig(level=logging.WARN)
 _logging_handler = 'interactive'
