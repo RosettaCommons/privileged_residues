@@ -28,7 +28,7 @@ test_requirements = [
 
 setup(
     name='privileged_residues',
-    version='0.2.0',
+    version='0.2.1',
     description="Privileged Residues contains methods for placing residues on the surface of a target protein that can be added to a RIF.",
     long_description=readme + '\n\n' + history,
     author="Brian D. Weitzner",
