@@ -34,7 +34,7 @@ setup(
     long_description=readme + '\n\n' + history,
     author="Brian D. Weitzner",
     author_email='weitzner@uw.edu',
-    url='https://github.com/weitzner/privileged_residues',
+    url='https://github.com/RosettaCommons/privileged_residues',
     packages=find_packages(include=['privileged_residues']),
     entry_points={
         'console_scripts': [

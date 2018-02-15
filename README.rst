@@ -6,15 +6,15 @@ Privileged Residues
 .. image:: https://img.shields.io/pypi/v/privileged_residues.svg
         :target: https://pypi.python.org/pypi/privileged_residues
 
-.. image:: https://img.shields.io/travis/weitzner/privileged_residues.svg
-        :target: https://travis-ci.org/weitzner/privileged_residues
+.. image:: https://img.shields.io/travis/RosettaCommons/privileged_residues.svg
+        :target: https://travis-ci.org/RosettaCommons/privileged_residues
 
 .. image:: https://readthedocs.org/projects/privileged-residues/badge/?version=latest
         :target: https://privileged-residues.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/weitzner/privileged_residues/shield.svg
-     :target: https://pyup.io/repos/github/weitzner/privileged_residues/
+.. image:: https://pyup.io/repos/github/RosettaCommons/privileged_residues/shield.svg
+     :target: https://pyup.io/repos/github/RosettaCommons/privileged_residues/
      :alt: Updates
 
 
