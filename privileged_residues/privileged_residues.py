@@ -45,8 +45,8 @@ def hash_ray_pairs_from_pdb_file(argv):
     hrp.hash_rays(np.stack(donors), np.stack(acceptors))
 
 
-def hash_networks_and_write_to_file(fname, out_dir, cart_resl=.1, ori_resl=2.,
-                                    cart_bound=16.):
+def hash_networks_and_write_to_file(root_dir, out_dir, fname='functional_stubs.pdb',
+                                    cart_resl=.1, ori_resl=2., cart_bound=16.):
     """
 
     Args:
@@ -61,13 +61,23 @@ def hash_networks_and_write_to_file(fname, out_dir, cart_resl=.1, ori_resl=2.,
     """
     import numpy as np
     import pickle
-    from os import path, makedirs
+    from os import path, makedirs, walk
     from . import process_networks as pn
     # TODO: use argparse to set these variables
     # TODO: adapt this script so all arrangements are searched in a single
     # execution. This will ensure that the groupings are appropriate
-    fname = 'arrangements/imidazole_carboxylate_guanidinium/functional_stubs.pdb'
+    # fname = 'arrangements/imidazole_carboxylate_guanidinium/functional_stubs.pdb'
     out_dir = 'hash_tables'
+
+    arrangement_files = []
+    for directory, sub_dirs, files in walk(path.abspath(root_dir)):
+        if fname in files:
+            _, arr = path.split(directory)
+            arrangement_files.append(path.join(directory, fname))
+
+    print(arrangement_files)
+    import sys
+    sys.exit()
 
     assert(path.isfile(fname))
     if not path.exists(out_dir):
