@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def is_broadcastable(shp1, shp2):
+def _is_broadcastable(shp1, shp2):
     for a, b in zip(shp1[::-1], shp2[::-1]):
         if a == 1 or b == 1 or a == b:
             pass
@@ -58,7 +58,7 @@ def rot_ein(axis, angle, degrees='auto', dtype='f8', shape=(4, 4),
     if degrees is 'auto':
         degrees = guess_is_degrees(angle)
     angle = angle * np.pi / 180.0 if degrees else angle
-    if axis.shape and angle.shape and not is_broadcastable(
+    if axis.shape and angle.shape and not _is_broadcastable(
             axis.shape[:-1], angle.shape):
         raise ValueError('axis and angle not compatible: ' +
                          str(axis.shape) + ' ' + str(angle.shape))
