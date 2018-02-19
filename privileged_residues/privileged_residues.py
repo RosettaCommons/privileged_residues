@@ -45,7 +45,7 @@ def hash_ray_pairs_from_pdb_file(argv):
     hrp.hash_rays(np.stack(donors), np.stack(acceptors))
 
 
-def hash_networks_and_write_to_file(root_dir, out_dir,
+def hash_networks_and_write_to_file(root_dir, out_dir='hash_tables',
                                     fname='functional_stubs.pdb',
                                     cart_resl=.1, ori_resl=2., cart_bound=16.):
     """
@@ -64,48 +64,48 @@ def hash_networks_and_write_to_file(root_dir, out_dir,
     import pickle
     from os import path, makedirs, walk
     from . import process_networks as pn
-    # TODO: use argparse to set these variables
-    # TODO: adapt this script so all arrangements are searched in a single
-    # execution. This will ensure that the groupings are appropriate
-    # fname = root_dir + '/imidazole_carboxylate_guanidinium/' + fname
-    out_dir = 'hash_tables'
 
+    # initialize pyrosetta
+    params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
+                         pn.fxnl_groups.items()]
+    opts = ['-ignore_waters false', '-mute core',
+            '-extra_res_fa {}'.format(' '.join(params_files_list))]
+    pyrosetta.init(extra_options=' '.join(opts),
+                   set_logging_handler=_logging_handler)
+
+    # get a list of the files that need to be processed
     arrangement_files = []
     for directory, sub_dirs, files in walk(path.abspath(root_dir)):
         if fname in files:
             _, arr = path.split(directory)
             arrangement_files.append(path.join(directory, fname))
 
-    print(arrangement_files)
-    import sys
-    sys.exit()
-
-    assert(path.isfile(fname))
-    if not path.exists(out_dir):
-        makedirs(out_dir)
-
-    params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
-                         pn.fxnl_groups.items()]
-
-    opts = ['-ignore_waters false', '-mute core',
-            '-extra_res_fa {}'.format(' '.join(params_files_list))]
-    pyrosetta.init(extra_options=' '.join(opts),
-                   set_logging_handler=_logging_handler)
-
+    # iterate over all of the files and make a giant ndarry containing all
+    # of the information. This thing is going to take up some serious memory.
     hash_types = []
-    for pose in pn.poses_for_all_models(fname):
-        hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
+    for ntwrk_file in arrangement_files:
+        for pose in pn.poses_for_all_models(ntwrk_file):
+            hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
 
+    # hash all of the processed infromation
     ht = pn.hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
 
+    # split the table into smaller tables based on interaction types
+    # and write to disk as a pickled dictionary. Keys are the hashed ray pairs,
+    # values are a list of (id, bin)s
     for i, interaction_type in enumerate(pn.interaction_types):
         t = ht[np.isin(ht['it'], [i])]
         out_fname = '_'.join([interaction_type, str(cart_resl), str(ori_resl),
                               str(cart_bound)]) + '.pkl'
 
         with open(path.join(out_dir, out_fname), 'wb') as f:
-            pickle.dump({k: v for k, v in zip(t['key'],
-                                              t[['id', 'hashed_ht']])}, f)
+            fdata = {}
+            for k, v in zip(t['key'], t[['id', 'hashed_ht']]):
+                try:
+                    fdata[k].append(v)
+                except KeyError:
+                    fdata[k] = [v]
+            pickle.dump(fdata, f)
 
 
 def laod_hash_tables_from_disk(fname=None):
@@ -152,8 +152,9 @@ def laod_hash_tables_from_disk(fname=None):
     hashed_rays = next(iter(hash_tables[table].keys()))
     positioning_info = hash_tables[table][hashed_rays]
 
+    # now positioning_info is a list of possible values
     fxnl_grps = list(process_networks.fxnl_groups.keys())
-    xform = pr.get_ht_from_table(positioning_info[1],
+    xform = pr.get_ht_from_table(positioning_info[0][1],
                                  hash_info[table].cart_resl,
                                  hash_info[table].ori_resl,
                                  hash_info[table].cart_bound)
