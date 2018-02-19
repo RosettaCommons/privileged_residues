@@ -45,7 +45,8 @@ def hash_ray_pairs_from_pdb_file(argv):
     hrp.hash_rays(np.stack(donors), np.stack(acceptors))
 
 
-def hash_networks_and_write_to_file(root_dir, out_dir, fname='functional_stubs.pdb',
+def hash_networks_and_write_to_file(root_dir, out_dir,
+                                    fname='functional_stubs.pdb',
                                     cart_resl=.1, ori_resl=2., cart_bound=16.):
     """
 
@@ -66,7 +67,7 @@ def hash_networks_and_write_to_file(root_dir, out_dir, fname='functional_stubs.p
     # TODO: use argparse to set these variables
     # TODO: adapt this script so all arrangements are searched in a single
     # execution. This will ensure that the groupings are appropriate
-    # fname = 'arrangements/imidazole_carboxylate_guanidinium/functional_stubs.pdb'
+    # fname = root_dir + '/imidazole_carboxylate_guanidinium/' + fname
     out_dir = 'hash_tables'
 
     arrangement_files = []

@@ -109,5 +109,6 @@ def tranform_pose(p, xform):
             p.residues[i].atom(j).xyz(xyzVec(x, y, z))
             tot_atoms += 1
 
+
 if __name__ == '__main__':
     print('Don\'t execute me, bruh.')

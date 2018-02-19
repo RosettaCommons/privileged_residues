@@ -109,7 +109,8 @@ def get_models_from_file(fname):
         models.
     """
     with open(fname, 'r') as f:
-        atom_records = [l.rstrip() for l in f.readlines() if not l.startswith('#')]
+        atom_records = [l.rstrip() for l in f.readlines()
+                        if not l.startswith('#')]
 
     models = []
     current_model = []
@@ -369,15 +370,15 @@ def find_all_relevant_hbonds_for_pose(p):
                     pos_don = positioned_residue_is_donor(pos_rsd, par_rsd)
                     assert(pos_don is not None)
                     if pos_don:
-                        donor, acceptor = pos_rsd, par_rsd 
+                        donor, acceptor = pos_rsd, par_rsd
                         ht.append('acceptor')
                     else:
                         acceptor, donor = pos_rsd, par_rsd
-                        ht.append('donor')    
+                        ht.append('donor')
                 else:
                     print('Ambiguous arrangement: both can donate & accept!')
-                    print('TODO(weitzner): See if this fxnl grp will work with '
-                          'the strategy used for hydroxide')
+                    print('TODO(weitzner): See if this fxnl grp will work '
+                          'with the strategy used for hydroxide')
 
             target, pos = rays_for_interaction(donor, acceptor, interaction)
             first.append(target) if i == 0 else second.append(target)
@@ -393,16 +394,17 @@ def find_all_relevant_hbonds_for_pose(p):
         assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store))
         array_size = 1
         if pos_fxnl_grp.resName == 'hydroxide':
-            # hydroxide only has two clearly positioned atoms -- the positioned frame
-            # needs to be rotated about the OH--HH bond to fill out the relevant
-            # orientations.
-            # the rotation will be centered on the hydrogen
+            # hydroxide only has two clearly positioned atoms
+            # the positioned frame needs to be rotated about the OH--HH bond
+            # to fill out the relevant orientations.
+            # the rotation will be centered on the hydrogen.
             resl = 5.  # degrees
 
             rot_cntr = np.array([*pos_rsd.xyz('HH')])
             axis = np.array([*pos_rsd.xyz('OH')]) - rot_cntr
             angles = np.arange(0., 360., resl)
-            r = rotation_matrix.rot_ein(axis, angles, degrees=True, center=rot_cntr)
+            r = rotation_matrix.rot_ein(axis, angles, degrees=True,
+                                        center=rot_cntr)
             assert(r.shape == (int(360. / resl),) + (4, 4))
 
             frame_to_store = r * frame_to_store

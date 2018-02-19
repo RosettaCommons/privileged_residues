@@ -10,7 +10,8 @@ def is_broadcastable(shp1, shp2):
     return True
 
 
-def rot_ein(axis, angle, degrees='auto', dtype='f8', shape=(4, 4), center=None):
+def rot_ein(axis, angle, degrees='auto', dtype='f8', shape=(4, 4),
+            center=None):
     """Compute the rotation matrix that describes the rotation by an
     angle about an axis and return it.
 
@@ -54,7 +55,8 @@ def rot_ein(axis, angle, degrees='auto', dtype='f8', shape=(4, 4), center=None):
     """
     axis = np.array(axis, dtype=dtype)
     angle = np.array(angle, dtype=dtype)
-    if degrees is 'auto': degrees = guess_is_degrees(angle)
+    if degrees is 'auto':
+        degrees = guess_is_degrees(angle)
     angle = angle * np.pi / 180.0 if degrees else angle
     if axis.shape and angle.shape and not is_broadcastable(
             axis.shape[:-1], angle.shape):
