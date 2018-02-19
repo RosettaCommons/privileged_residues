@@ -9,6 +9,7 @@ from numpy.testing import assert_allclose
 # The import calls are wrapped in a try/except block
 try:
     import pyrosetta
+    from pyrosetta.rosetta.core.id import AtomID
 except ImportError:
     print('Module "pyrosetta" not found in the current environment! '
           'Go to http://www.pyrosetta.org to download it.')
@@ -88,6 +89,23 @@ Attributes:
     base (pyrosetta.rosetta.core.id.AtomID): The atom used to define
         the direction of the ray.
 """
+
+
+# helper functions for identifying hbond partners
+def _get_atom_id_pair(rsd, atmno):
+    base_atmno = rsd.atom_base(atmno)
+    return AtomIDPair(AtomID(atmno, rsd.seqpos()),
+                      AtomID(base_atmno, rsd.seqpos()))
+
+
+def _vector_from_id(atom_id, rsd):
+    return np.array([*rsd.xyz(atom_id.atomno())])
+
+
+def _positioning_ray(rsd, atmno):
+    id_pair = _get_atom_id_pair(rsd, atmno)
+    return hbond_ray_pairs.create_ray(_vector_from_id(id_pair.center, rsd),
+                                      _vector_from_id(id_pair.base, rsd))
 
 
 def get_models_from_file(fname):
@@ -202,21 +220,6 @@ def rays_for_interaction(donor, acceptor, interaction):
         describing the stationary and positioned residues,
         respectively.
     """
-    from pyrosetta.rosetta.core.id import AtomID
-
-    def _get_atom_id_pair(rsd, atmno):
-        base_atmno = rsd.atom_base(atmno)
-        return AtomIDPair(AtomID(atmno, rsd.seqpos()),
-                          AtomID(base_atmno, rsd.seqpos()))
-
-    def _vector_from_id(atom_id, rsd):
-        return np.array([*rsd.xyz(atom_id.atomno())])
-
-    def _positioning_ray(rsd, atmno):
-        id_pair = _get_atom_id_pair(rsd, atmno)
-        return hbond_ray_pairs.create_ray(_vector_from_id(id_pair.center, rsd),
-                                          _vector_from_id(id_pair.base, rsd))
-
     don_rays = []
     for i in range(1, donor.natoms() + 1):
         # in case we use full residues later on
@@ -249,41 +252,36 @@ def rays_for_interaction(donor, acceptor, interaction):
 
 
 def positioned_residue_is_donor(positioned, target):
-    from pyrosetta.rosetta.core.id import AtomID
+    """Determine whether the residue positioned by the hydrogen bond of
+    interest is the donor and return True if it is.
 
-    def _get_atom_id_pair(rsd, atmno):
-        base_atmno = rsd.atom_base(atmno)
-        return AtomIDPair(AtomID(atmno, rsd.seqpos()),
-                          AtomID(base_atmno, rsd.seqpos()))
+    Args:
+        positioned (pyrosetta.rosetta.core.conformation.Residue): The
+            residue that is positioned by the hydrogen bond.
+        target (pyrosetta.rosetta.core.conformation.Residue): The
+            residue that is having a hydrogen bonding ray extracted
+            from it.
+    Returns:
+        bool: True if positioned residue is the hydrogen bond donor,
+        False if it is the acceptor.
 
-    def _vector_from_id(atom_id, rsd):
-        return np.array([*rsd.xyz(atom_id.atomno())])
+        If the function cannot determine which residue is the donor, it
+        returns None.
+    """
+    def _get_my_rays(rsd):
+        rays = []
+        atms = []
+        for i in range(1, rsd.natoms() + 1):
+            # in case we use full residues later on
+            if rsd.atom_is_backbone(i):
+                continue
+            if rsd.atom_type(i).element() in ('N', 'O', 'H'):
+                rays.append(_positioning_ray(rsd, i))
+                atms.append(i)
+        return rays, atms
 
-    def _positioning_ray(rsd, atmno):
-        id_pair = _get_atom_id_pair(rsd, atmno)
-        return hbond_ray_pairs.create_ray(_vector_from_id(id_pair.center, rsd),
-                                          _vector_from_id(id_pair.base, rsd))
-
-    tgt_rays = []
-    tgt_atms = []
-    for i in range(1, target.natoms() + 1):
-        # in case we use full residues later on
-        if target.atom_is_backbone(i):
-            continue
-        # if target.atom_is_polar_hydrogen(i):
-        if target.atom_type(i).element() in ('N', 'O', 'H'):
-            tgt_rays.append(_positioning_ray(target, i))
-            tgt_atms.append(i)
-
-    pos_rays = []
-    pos_atms = []
-    for i in range(1, positioned.natoms() + 1):
-        # in case we use full residues later on
-        if positioned.atom_is_backbone(i):
-            continue
-        if positioned.atom_type(i).element() in ('N', 'O', 'H'):
-            pos_rays.append(_positioning_ray(positioned, i))
-            pos_atms.append(i)
+    tgt_rays, tgt_atms = _get_my_rays(target)
+    pos_rays, pos_atms = _get_my_rays(positioned)
 
     tgt = np.stack(tgt_rays)
     pos = np.stack(pos_rays)
