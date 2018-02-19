@@ -245,6 +245,47 @@ def rays_for_interaction(donor, acceptor, interaction):
     return target, positioned_residue
 
 
+def find_best_interaction_pair(target, positioned):
+    from pyrosetta.rosetta.core.id import AtomID
+
+    def _get_atom_id_pair(rsd, atmno):
+        base_atmno = rsd.atom_base(atmno)
+        return AtomIDPair(AtomID(atmno, rsd.seqpos()),
+                          AtomID(base_atmno, rsd.seqpos()))
+
+    def _vector_from_id(atom_id, rsd):
+        return np.array([*rsd.xyz(atom_id.atomno())])
+
+    def _positioning_ray(rsd, atmno):
+        id_pair = _get_atom_id_pair(rsd, atmno)
+        return hbond_ray_pairs.create_ray(_vector_from_id(id_pair.center, rsd),
+                                          _vector_from_id(id_pair.base, rsd))
+
+    tgt_rays = []
+    for i in range(1, target.natoms() + 1):
+        # in case we use full residues later on
+        if target.atom_is_backbone(i):
+            continue
+        # if target.atom_is_polar_hydrogen(i):
+        if target.atom_type(i).element() in ('N', 'O', 'H'):
+            tgt_rays.append(_positioning_ray(target, i))
+
+    pos_rays = []
+    for i in positioned.accpt_pos():
+        # in case we use full residues later on
+        if positioned.atom_is_backbone(i):
+            continue
+        if positioned.atom_type(i).element() in ('N', 'O', 'H'):
+            pos_rays.append(_positioning_ray(target, i))
+
+    tgt = np.stack(tgt_rays)
+    pos = np.stack(pos_rays)
+    dist = np.linalg.norm(tgt[:, np.newaxis, 0, :] - pos``[np.newaxis, :, 0, :],
+                          axis=-1)
+    tgt_idx, pos_idx = np.unravel_index(np.argmin(dist, axis=None), dist.shape)
+    print(tgt_idx)
+
+
 def find_all_relevant_hbonds_for_pose(p):
     """Enumerate all possible arrangements of residues in a Pose of a
     closed hydrogen-bonded network of residues, pack the arrangment
@@ -315,6 +356,8 @@ def find_all_relevant_hbonds_for_pose(p):
                 print('Ambiguous arrangement: both can donate & accept!')
                 print('Trying something a little more complicated...')
                 print('Oh shit, I should probably implement this!')
+                if pos_fxnl_grp.resName == 'hydroxide':
+                    #
                 import sys
                 sys.exit(1)
 
