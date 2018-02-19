@@ -331,6 +331,21 @@ def find_all_relevant_hbonds_for_pose(p):
         frame_to_store = np.dot(np.linalg.inv(ray_frame), pos_frame)
         assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store))
 
+        if pos_fxnl_grp.resName == 'hydroxide':
+            # hydroxide only has two clearly positioned atoms -- the positioned frame
+            # needs to be rotated about the OH--HH bond to fill out the relevant
+            # orientations.
+            # the rotation will be centered on the hydrogen
+            resl = 5.  # degrees
+
+            rot_cntr = np.array([*pos_rsd.xyz('HH')])
+            axis = np.array([*pos_rsd.xyz('OH')]) - rot_cntr
+            angles = np.arange(0., 360., resl)
+            r = rotation_matrix.rot_ein(axis, angles, degrees=True, center=rot_cntr)
+            assert(r.shape == (int(360. / resl)) + homog_shape)
+
+            frame_to_store = r * frame_to_store
+
         # store a tuple of the Rays and the positioning information.
         # pop first and second upon constructing entry to prepare for the
         # next iteration
@@ -339,7 +354,8 @@ def find_all_relevant_hbonds_for_pose(p):
                                     fxnl_grps.index(pos_rsd.name3()),
                                     frame_to_store),
                                    dtype=entry_type))
-
+        import sys
+        sys.exit()
     return hash_types
 
 

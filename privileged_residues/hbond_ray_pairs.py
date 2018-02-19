@@ -298,7 +298,7 @@ def get_frame_for_coords(coords):
 
     assert(coords.shape == (3, 3))
 
-    frame = np.empty((4, 4))
+    frame = np.zeros((4, 4))
     frame[:3, 3] = coords[2]
     frame[3, 3] = 1.
 
@@ -309,7 +309,7 @@ def get_frame_for_coords(coords):
     y_hat = coords[0] - coords[1]
     y_hat -= np.dot(y_hat, z_hat) * z_hat
     y_hat /= np.linalg.norm(y_hat)
-    assert_allclose(np.dot(y_hat, z_hat), 0.)
+    assert_allclose(np.dot(y_hat, z_hat), 0., atol=1E-15)
 
     frame[:3, 1] = y_hat
 
