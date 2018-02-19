@@ -268,7 +268,7 @@ def positioned_residue_is_donor(positioned, target):
         If the function cannot determine which residue is the donor, it
         returns None.
     """
-    def _get_my_rays(rsd):
+    def _get_all_rays(rsd):
         rays = []
         atms = []
         for i in range(1, rsd.natoms() + 1):
@@ -280,8 +280,8 @@ def positioned_residue_is_donor(positioned, target):
                 atms.append(i)
         return rays, atms
 
-    tgt_rays, tgt_atms = _get_my_rays(target)
-    pos_rays, pos_atms = _get_my_rays(positioned)
+    tgt_rays, tgt_atms = _get_all_rays(target)
+    pos_rays, pos_atms = _get_all_rays(positioned)
 
     tgt = np.stack(tgt_rays)
     pos = np.stack(pos_rays)
