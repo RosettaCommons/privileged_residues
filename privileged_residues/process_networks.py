@@ -23,6 +23,8 @@ except ImportError:
     pass
 
 from . import hbond_ray_pairs
+from . import rotation_matrix
+
 
 # the order of the keys of this dictionary
 FxnlGrp = namedtuple('FxnlGrp', ['resName', 'donor', 'acceptor', 'atoms'])
@@ -107,7 +109,7 @@ def get_models_from_file(fname):
         models.
     """
     with open(fname, 'r') as f:
-        atom_records = [l.rstrip() for l in f.readlines()]
+        atom_records = [l.rstrip() for l in f.readlines() if not l.startswith('#')]
 
     models = []
     current_model = []
@@ -245,7 +247,7 @@ def rays_for_interaction(donor, acceptor, interaction):
     return target, positioned_residue
 
 
-def find_best_interaction_pair(target, positioned):
+def positioned_residue_is_donor(positioned, target):
     from pyrosetta.rosetta.core.id import AtomID
 
     def _get_atom_id_pair(rsd, atmno):
@@ -262,6 +264,7 @@ def find_best_interaction_pair(target, positioned):
                                           _vector_from_id(id_pair.base, rsd))
 
     tgt_rays = []
+    tgt_atms = []
     for i in range(1, target.natoms() + 1):
         # in case we use full residues later on
         if target.atom_is_backbone(i):
@@ -269,21 +272,29 @@ def find_best_interaction_pair(target, positioned):
         # if target.atom_is_polar_hydrogen(i):
         if target.atom_type(i).element() in ('N', 'O', 'H'):
             tgt_rays.append(_positioning_ray(target, i))
+            tgt_atms.append(i)
 
     pos_rays = []
-    for i in positioned.accpt_pos():
+    pos_atms = []
+    for i in range(1, positioned.natoms() + 1):
         # in case we use full residues later on
         if positioned.atom_is_backbone(i):
             continue
         if positioned.atom_type(i).element() in ('N', 'O', 'H'):
-            pos_rays.append(_positioning_ray(target, i))
+            pos_rays.append(_positioning_ray(positioned, i))
+            pos_atms.append(i)
 
     tgt = np.stack(tgt_rays)
     pos = np.stack(pos_rays)
-    dist = np.linalg.norm(tgt[:, np.newaxis, 0, :] - pos``[np.newaxis, :, 0, :],
+    dist = np.linalg.norm(tgt[:, np.newaxis, 0, :] - pos[np.newaxis, :, 0, :],
                           axis=-1)
     tgt_idx, pos_idx = np.unravel_index(np.argmin(dist, axis=None), dist.shape)
-    print(tgt_idx)
+
+    if positioned.atom_type(pos_atms[pos_idx]).element() == 'H':
+        return True
+    elif target.atom_type(tgt_atms[tgt_idx]).element() == 'H':
+        return False
+    return None
 
 
 def find_all_relevant_hbonds_for_pose(p):
@@ -353,13 +364,20 @@ def find_all_relevant_hbonds_for_pose(p):
                 donor, acceptor = (p.residues[i] for i in res_nos)
                 ht.append('acceptor')
             else:
-                print('Ambiguous arrangement: both can donate & accept!')
-                print('Trying something a little more complicated...')
-                print('Oh shit, I should probably implement this!')
                 if pos_fxnl_grp.resName == 'hydroxide':
-                    #
-                import sys
-                sys.exit(1)
+                    par_rsd = p.residues[interaction.partner]
+                    pos_don = positioned_residue_is_donor(pos_rsd, par_rsd)
+                    assert(pos_don is not None)
+                    if pos_don:
+                        donor, acceptor = pos_rsd, par_rsd 
+                        ht.append('acceptor')
+                    else:
+                        acceptor, donor = pos_rsd, par_rsd
+                        ht.append('donor')    
+                else:
+                    print('Ambiguous arrangement: both can donate & accept!')
+                    print('TODO(weitzner): See if this fxnl grp will work with '
+                          'the strategy used for hydroxide')
 
             target, pos = rays_for_interaction(donor, acceptor, interaction)
             first.append(target) if i == 0 else second.append(target)
@@ -373,7 +391,7 @@ def find_all_relevant_hbonds_for_pose(p):
         pos_frame = hbond_ray_pairs.get_frame_for_coords(np.stack(c))
         frame_to_store = np.dot(np.linalg.inv(ray_frame), pos_frame)
         assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store))
-
+        array_size = 1
         if pos_fxnl_grp.resName == 'hydroxide':
             # hydroxide only has two clearly positioned atoms -- the positioned frame
             # needs to be rotated about the OH--HH bond to fill out the relevant
@@ -385,20 +403,22 @@ def find_all_relevant_hbonds_for_pose(p):
             axis = np.array([*pos_rsd.xyz('OH')]) - rot_cntr
             angles = np.arange(0., 360., resl)
             r = rotation_matrix.rot_ein(axis, angles, degrees=True, center=rot_cntr)
-            assert(r.shape == (int(360. / resl)) + homog_shape)
+            assert(r.shape == (int(360. / resl),) + (4, 4))
 
             frame_to_store = r * frame_to_store
+            array_size = frame_to_store.shape[0]
 
         # store a tuple of the Rays and the positioning information.
         # pop first and second upon constructing entry to prepare for the
         # next iteration
-        hash_types.append(np.array((interaction_types.index(table),
-                                    first.pop(), second.pop(),
-                                    fxnl_grps.index(pos_rsd.name3()),
-                                    frame_to_store),
-                                   dtype=entry_type))
-        import sys
-        sys.exit()
+        res = np.empty(array_size, dtype=entry_type)
+        res['it'] = interaction_types.index(table)
+        res['r1'] = first.pop()
+        res['r2'] = second.pop()
+        res['id'] = fxnl_grps.index(pos_rsd.name3())
+        res['ht'] = frame_to_store
+        hash_types.extend(res)
+
     return hash_types
 
 

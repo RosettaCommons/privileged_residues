@@ -62,7 +62,7 @@ def rot_ein(axis, angle, degrees='auto', dtype='f8', shape=(4, 4), center=None):
                          str(axis.shape) + ' ' + str(angle.shape))
     axis /= np.linalg.norm(axis, axis=-1)[..., np.newaxis]
 
-	center = (np.array([0, 0, 0], dtype=dtype) if center is None
+    center = (np.array([0, 0, 0], dtype=dtype) if center is None
               else np.array(center, dtype=dtype))
 
     outshape = angle.shape if angle.shape else axis.shape[:-1]
@@ -84,7 +84,7 @@ def rot_ein(axis, angle, degrees='auto', dtype='f8', shape=(4, 4), center=None):
         sin_vec * axis_cross_prod_mat + \
         (1 - cos_vec) * kronecker_prod
 
-	x, y, z = center[..., 0], center[..., 1], center[..., 2]
+    x, y, z = center[..., 0], center[..., 1], center[..., 2]
     r[..., 0, 3] = x - r[..., 0, 0] * x - r[..., 0, 1] * y - r[..., 0, 2] * z
     r[..., 1, 3] = y - r[..., 1, 0] * x - r[..., 1, 1] * y - r[..., 1, 2] * z
     r[..., 2, 3] = z - r[..., 2, 0] * x - r[..., 2, 1] * y - r[..., 2, 2] * z
