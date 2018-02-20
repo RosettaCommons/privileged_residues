@@ -390,7 +390,7 @@ def find_all_relevant_hbonds_for_pose(p):
         pos_frame = hbond_ray_pairs.get_frame_for_coords(np.stack(c))
         frame_to_store = np.dot(np.linalg.inv(ray_frame), pos_frame)
         assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store),
-                        atol=1E-15)
+                        atol=1E-10)
         array_size = 1
         if pos_fxnl_grp.resName == 'hydroxide':
             # hydroxide only has two clearly positioned atoms
