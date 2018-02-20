@@ -127,8 +127,13 @@ def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
     _init_pyrosetta()
 
     hash_types = []
-    for pose in pn.poses_for_all_models(ntwrk_file):
+    for pose in pn.poses_for_all_models(fname):
         hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
+        print(ntwrk_file)
+        for i, pose in enumerate(pn.poses_for_all_models(ntwrk_file)):
+            if not i % 100:
+                print('Pose ' + str(i))
+            hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
 
     # hash all of the processed infromation
     ht = pn.hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
