@@ -19,6 +19,23 @@ _dir = path.join(path.dirname(__file__), 'data', 'functional_groups')
 logging.basicConfig(level=logging.WARN)
 _logging_handler = 'interactive'
 
+_PYROSETTA_INIT = False
+
+
+def _init_pyrosetta():
+    # initialize pyrosetta
+    assert(HAVE_PYROSETTA)
+    if _PYROSETTA_INIT:
+        return
+
+    params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
+                         pn.fxnl_groups.items()]
+    opts = ['-ignore_waters false', '-mute core',
+            '-extra_res_fa {}'.format(' '.join(params_files_list))]
+    pyrosetta.init(extra_options=' '.join(opts),
+                   set_logging_handler=_logging_handler)
+    _PYROSETTA_INIT = True
+
 
 def hash_ray_pairs_from_pdb_file(argv):
     """
@@ -45,9 +62,52 @@ def hash_ray_pairs_from_pdb_file(argv):
     hrp.hash_rays(np.stack(donors), np.stack(acceptors))
 
 
-def hash_networks_and_write_to_file(root_dir, out_dir='hash_tables',
-                                    fname='functional_stubs.pdb',
-                                    cart_resl=.1, ori_resl=2., cart_bound=16.):
+
+def hash_all_network_files_in_directory(root_dir, out_dir='hash_tables',
+                                        fname='functional_stubs.pdb',
+                                        cart_resl=.1, ori_resl=2.,
+                                        cart_bound=16.)):
+    """
+
+    Args:
+        fname (str):
+        out_dir (str):
+        fname (str): A pattern for network files in the subdirectories
+            of root_dir.
+        cart_resl (float): The cartesian resolution of the BCC lattice.
+            Defaults to 0.1.
+        ori_resl (float): The orientational resolution of the BCC
+            lattice. In general, ori_resl should be roughly
+            20 * cart_resl. Defaults to 2.0.
+        cart_bound (float): The bounds of the lattice. Defaults to 16.
+
+    """
+    from os import path, makedirs, walk
+
+    _init_pyrosetta()
+
+    # get a list of the files that need to be processed
+    arrangement_files = []
+    output_file_base_names = []
+    for directory, sub_dirs, files in walk(path.abspath(root_dir)):
+        if fname in files:
+            _, arr = path.split(directory)
+            arrangement_files.append(path.join(directory, fname))
+            output_file_base_names.append(path.join(out_dir),
+                path.basename(path.normpath(directory)))
+
+    if not path.exists(out_dir):
+        makedirs(out_dir)
+
+    # iterate over all of the files and make a giant ndarry containing all
+    # of the information. This thing is going to take up some serious memory.
+    for ntwrk_file in arrangement_files:
+        hash_networks_and_write_to_file(fname, out_dir, cart_resl, ori_resl,
+                                        cart_bound)
+
+
+def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
+                                    ori_resl=2., cart_bound=16.):
     """
 
     Args:
@@ -62,30 +122,13 @@ def hash_networks_and_write_to_file(root_dir, out_dir='hash_tables',
     """
     import numpy as np
     import pickle
-    from os import path, makedirs, walk
     from . import process_networks as pn
 
-    # initialize pyrosetta
-    params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
-                         pn.fxnl_groups.items()]
-    opts = ['-ignore_waters false', '-mute core',
-            '-extra_res_fa {}'.format(' '.join(params_files_list))]
-    pyrosetta.init(extra_options=' '.join(opts),
-                   set_logging_handler=_logging_handler)
+    _init_pyrosetta()
 
-    # get a list of the files that need to be processed
-    arrangement_files = []
-    for directory, sub_dirs, files in walk(path.abspath(root_dir)):
-        if fname in files:
-            _, arr = path.split(directory)
-            arrangement_files.append(path.join(directory, fname))
-
-    # iterate over all of the files and make a giant ndarry containing all
-    # of the information. This thing is going to take up some serious memory.
     hash_types = []
-    for ntwrk_file in arrangement_files:
-        for pose in pn.poses_for_all_models(ntwrk_file):
-            hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
+    for pose in pn.poses_for_all_models(ntwrk_file):
+        hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
 
     # hash all of the processed infromation
     ht = pn.hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
@@ -95,8 +138,9 @@ def hash_networks_and_write_to_file(root_dir, out_dir='hash_tables',
     # values are a list of (id, bin)s
     for i, interaction_type in enumerate(pn.interaction_types):
         t = ht[np.isin(ht['it'], [i])]
-        out_fname = '_'.join([interaction_type, str(cart_resl), str(ori_resl),
-                              str(cart_bound)]) + '.pkl'
+        out_fname = out_name_base + '_'.join([interaction_type, str(cart_resl),
+                                             str(ori_resl),
+                                             str(cart_bound)]) + '.pkl'
 
         with open(path.join(out_dir, out_fname), 'wb') as f:
             fdata = {}
@@ -127,14 +171,7 @@ def laod_hash_tables_from_disk(fname=None):
     from . import process_networks
     from . import position_residue as pr
 
-    # setup per-use variables with argparse
-    params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
-                         process_networks.fxnl_groups.items()]
-
-    opts = ['-ignore_waters false', '-mute core',
-            '-extra_res_fa {}'.format(' '.join(params_files_list))]
-    pyrosetta.init(extra_options=' '.join(opts),
-                   set_logging_handler=_logging_handler)
+    _init_pyrosetta()
 
     # for now I'll just focus on a single file
     hash_tables = {}
