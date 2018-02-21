@@ -363,20 +363,15 @@ def find_all_relevant_hbonds_for_pose(p):
                 donor, acceptor = (p.residues[i] for i in res_nos)
                 ht.append('acceptor')
             else:
-                if pos_fxnl_grp.resName == 'hydroxide':
-                    par_rsd = p.residues[interaction.partner]
-                    pos_don = positioned_residue_is_donor(pos_rsd, par_rsd)
-                    assert(pos_don is not None)
-                    if pos_don:
-                        donor, acceptor = pos_rsd, par_rsd
-                        ht.append('acceptor')
-                    else:
-                        acceptor, donor = pos_rsd, par_rsd
-                        ht.append('donor')
+                par_rsd = p.residues[interaction.partner]
+                pos_don = positioned_residue_is_donor(pos_rsd, par_rsd)
+                assert(pos_don is not None)
+                if pos_don:
+                    donor, acceptor = pos_rsd, par_rsd
+                    ht.append('acceptor')
                 else:
-                    print('Ambiguous arrangement: both can donate & accept!')
-                    print('TODO(weitzner): See if this fxnl grp will work '
-                          'with the strategy used for hydroxide')
+                    acceptor, donor = pos_rsd, par_rsd
+                    ht.append('donor')
 
             target, pos = rays_for_interaction(donor, acceptor, interaction)
             first.append(target) if i == 0 else second.append(target)

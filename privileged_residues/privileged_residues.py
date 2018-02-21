@@ -25,9 +25,11 @@ _PYROSETTA_INIT = False
 def _init_pyrosetta():
     # initialize pyrosetta
     assert(HAVE_PYROSETTA)
+    global _PYROSETTA_INIT
     if _PYROSETTA_INIT:
         return
 
+    from . import process_networks as pn
     params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
                          pn.fxnl_groups.items()]
     opts = ['-ignore_waters false', '-mute core',
@@ -66,7 +68,7 @@ def hash_ray_pairs_from_pdb_file(argv):
 def hash_all_network_files_in_directory(root_dir, out_dir='hash_tables',
                                         fname='functional_stubs.pdb',
                                         cart_resl=.1, ori_resl=2.,
-                                        cart_bound=16.)):
+                                        cart_bound=16.):
     """
 
     Args:
@@ -127,13 +129,11 @@ def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
     _init_pyrosetta()
 
     hash_types = []
-    for pose in pn.poses_for_all_models(fname):
+    print(fname)
+    for i, pose in enumerate(pn.poses_for_all_models(fname)):
+        if not i % 100:
+            print('Pose ' + str(i))
         hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
-        print(ntwrk_file)
-        for i, pose in enumerate(pn.poses_for_all_models(ntwrk_file)):
-            if not i % 100:
-                print('Pose ' + str(i))
-            hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
 
     # hash all of the processed infromation
     ht = pn.hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
@@ -143,11 +143,12 @@ def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
     # values are a list of (id, bin)s
     for i, interaction_type in enumerate(pn.interaction_types):
         t = ht[np.isin(ht['it'], [i])]
-        out_fname = out_name_base + '_'.join([interaction_type, str(cart_resl),
-                                             str(ori_resl),
-                                             str(cart_bound)]) + '.pkl'
+        out_fname = out_name_base + '_' + '_'.join([interaction_type, 
+                                                    str(cart_resl),
+                                                    str(ori_resl),
+                                                    str(cart_bound)]) + '.pkl'
 
-        with open(path.join(out_dir, out_fname), 'wb') as f:
+        with open(out_fname, 'wb') as f:
             fdata = {}
             for k, v in zip(t['key'], t[['id', 'hashed_ht']]):
                 try:
