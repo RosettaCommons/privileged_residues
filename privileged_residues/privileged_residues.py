@@ -143,7 +143,7 @@ def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
     # values are a list of (id, bin)s
     for i, interaction_type in enumerate(pn.interaction_types):
         t = ht[np.isin(ht['it'], [i])]
-        out_fname = out_name_base + '_' + '_'.join([interaction_type, 
+        out_fname = out_name_base + '_' + '_'.join([interaction_type,
                                                     str(cart_resl),
                                                     str(ori_resl),
                                                     str(cart_bound)]) + '.pkl'
@@ -152,9 +152,9 @@ def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
             fdata = {}
             for k, v in zip(t['key'], t[['id', 'hashed_ht']]):
                 try:
-                    fdata[k].append(v)
+                    fdata[k].add(v)
                 except KeyError:
-                    fdata[k] = [v]
+                    fdata[k] = {v}
             pickle.dump(fdata, f)
 
 
@@ -195,7 +195,7 @@ def laod_hash_tables_from_disk(fname=None):
     hashed_rays = next(iter(hash_tables[table].keys()))
     positioning_info = hash_tables[table][hashed_rays]
 
-    # now positioning_info is a list of possible values
+    # now positioning_info is a set of possible values
     fxnl_grps = list(process_networks.fxnl_groups.keys())
     xform = pr.get_ht_from_table(positioning_info[0][1],
                                  hash_info[table].cart_resl,
