@@ -152,9 +152,9 @@ def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
             fdata = {}
             for k, v in zip(t['key'], t[['id', 'hashed_ht']]):
                 try:
-                    fdata[k].add(v)
+                    fdata[k].add(tuple(v))
                 except KeyError:
-                    fdata[k] = {v}
+                    fdata[k] = {tuple(v)}
             pickle.dump(fdata, f)
 
 
