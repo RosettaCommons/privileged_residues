@@ -107,6 +107,42 @@ def hash_all_network_files_in_directory(root_dir, out_dir='hash_tables',
         hash_networks_and_write_to_file(fname, out_dir, cart_resl, ori_resl,
                                         cart_bound)
 
+def _hash_from_file(fname, out_name_base, cart_resl, ori_resl, cart_bound, mod):
+    import numpy as np
+    import pickle
+    from . import process_networks as pn
+
+    _init_pyrosetta()
+
+    hash_types = []
+    print(fname)
+    for i, pose in enumerate(pn.poses_for_all_models(fname)):
+        if not i % 100:
+            print('Pose ' + str(i))
+        hash_types.extend(mod.find_all_relevant_hbonds_for_pose(pose))
+
+    # hash all of the processed infromation
+    ht = pn.hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
+
+    # split the table into smaller tables based on interaction types
+    # and write to disk as a pickled dictionary. Keys are the hashed ray pairs,
+    # values are a list of (id, bin)s
+    for i, interaction_type in enumerate(mod.interaction_types):
+        t = ht[np.isin(ht['it'], [i])]
+        out_fname = out_name_base + '_' + '_'.join([interaction_type,
+                                                    str(cart_resl),
+                                                    str(ori_resl),
+                                                    str(cart_bound)]) + '.pkl'
+
+        with open(out_fname, 'wb') as f:
+            fdata = {}
+            for k, v in zip(t['key'], t[['id', 'hashed_ht']]):
+                try:
+                    fdata[k].add(tuple(v))
+                except KeyError:
+                    fdata[k] = {tuple(v)}
+            pickle.dump(fdata, f)
+
 
 def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
                                     ori_resl=2., cart_bound=16.):
@@ -122,40 +158,26 @@ def hash_networks_and_write_to_file(fname, out_name_base, cart_resl=.1,
             20 * cart_resl. Defaults to 2.0.
         cart_bound (float): The bounds of the lattice. Defaults to 16.
     """
-    import numpy as np
-    import pickle
     from . import process_networks as pn
+    _hash_from_file(fname, out_name_base, cart_resl, ori_resl, cart_bound, pn)
 
-    _init_pyrosetta()
 
-    hash_types = []
-    print(fname)
-    for i, pose in enumerate(pn.poses_for_all_models(fname)):
-        if not i % 100:
-            print('Pose ' + str(i))
-        hash_types.extend(pn.find_all_relevant_hbonds_for_pose(pose))
+def hash_bidentates_and_write_to_file(fname, out_name_base, cart_resl=.1,
+                                      ori_resl=2., cart_bound=16.):
+    """
 
-    # hash all of the processed infromation
-    ht = pn.hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
-
-    # split the table into smaller tables based on interaction types
-    # and write to disk as a pickled dictionary. Keys are the hashed ray pairs,
-    # values are a list of (id, bin)s
-    for i, interaction_type in enumerate(pn.interaction_types):
-        t = ht[np.isin(ht['it'], [i])]
-        out_fname = out_name_base + '_' + '_'.join([interaction_type,
-                                                    str(cart_resl),
-                                                    str(ori_resl),
-                                                    str(cart_bound)]) + '.pkl'
-
-        with open(out_fname, 'wb') as f:
-            fdata = {}
-            for k, v in zip(t['key'], t[['id', 'hashed_ht']]):
-                try:
-                    fdata[k].add(tuple(v))
-                except KeyError:
-                    fdata[k] = {tuple(v)}
-            pickle.dump(fdata, f)
+    Args:
+        fname (str):
+        out_dir (str):
+        cart_resl (float): The cartesian resolution of the BCC lattice.
+            Defaults to 0.1.
+        ori_resl (float): The orientational resolution of the BCC
+            lattice. In general, ori_resl should be roughly
+            20 * cart_resl. Defaults to 2.0.
+        cart_bound (float): The bounds of the lattice. Defaults to 16.
+    """
+    from . import process_bidentates as pb
+    _hash_from_file(fname, out_name_base, cart_resl, ori_resl, cart_bound, pb) 
 
 
 def laod_hash_tables_from_disk(fname=None):
