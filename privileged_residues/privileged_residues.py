@@ -235,3 +235,27 @@ def laod_hash_tables_from_disk(fname=None):
     xf = np.dot(pos_frame, xform)
     tranform_pose(p, xf)
     # convert pose to ATOM records append all together and write them to a file
+
+
+def find_privileged_interactions_in_pose(p):
+    """
+    """
+    from os import path
+    import pickle
+    from . import bidentify as bd
+    from . import position_residue as pr
+
+    ht_name = 'Sc_Bb_02_0002_0000_Sc_Bb_0.1_2.0_16.0.pkl'
+    ht_path = path.expanduser('~/digs/bidentate_hbond_pdbs_2/hash_tables/Sc_Bb/02')
+    ht_name_full = path.join(ht_path, ht_name)
+    table_data = pr._fname_to_HTD('Sc_Bb_0.1_2.0_16.0.pkl')
+    
+    with open(ht_name_full, 'rb') as f:
+        ht = pickle.load(f)
+        pairs_of_rays = bd.find_hashable_positions(p, ht)
+
+    return pairs_of_rays, ht
+
+
+
+
