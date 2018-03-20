@@ -121,6 +121,8 @@ def _hash_from_file(fname, out_name_base, cart_resl, ori_resl, cart_bound, mod):
             print('Pose ' + str(i))
         hash_types.extend(mod.find_all_relevant_hbonds_for_pose(pose))
 
+    if hash_types == []:
+        return
     # hash all of the processed infromation
     ht = pn.hash_full(np.stack(hash_types), cart_resl, ori_resl, cart_bound)
 
