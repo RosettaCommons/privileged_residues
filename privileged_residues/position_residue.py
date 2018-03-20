@@ -84,8 +84,8 @@ def get_ht_from_table(bin, cart_resl, ori_resl, cart_bound):
     return xh.get_center([bin])['raw'].squeeze()
 
 
-def tranform_pose(p, xform):
-    """Tranform the atomic coordinates of Pose by a specified
+def transform_pose(p, xform):
+    """Transform the atomic coordinates of Pose by a specified
     homogenous tranform.
 
     Args:

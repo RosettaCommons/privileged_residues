@@ -23,28 +23,33 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
     """
     hits = []
     for r1, r2 in pairs_of_rays:
-        key = hbond_ray_pairs.hash_rays(r1, r2)
-        positioning_info = ht[hashed_rays]
-        
+        hashed_rays = int(hbond_ray_pairs.hash_rays(r1, r2))
+        try:
+            positioning_info = ht[hashed_rays]
+        except KeyError:
+            continue
+            
         # now positioning_info is a set of possible values
         fxnl_grps = list(pn.fxnl_groups.keys())
-        xform = pr.get_ht_from_table(positioning_info[0][1],
-                                     cart_resl,
-                                     ori_resl,
-                                     cart_bound)
 
-        rsd = fxnl_grps[positioning_info[0]]
-        pos_grp = pn.fxnl_groups[rsd]
+        for pos_info in positioning_info:
+            xform = pr.get_ht_from_table(pos_info[1],
+                                         cart_resl,
+                                         ori_resl,
+                                         cart_bound)
 
-        p = pyrosetta.Pose()
-        pyrosetta.make_pose_from_sequence(p, 'Z[{}]'.format(rsd), 'fa_standard')
-        coords = [np.array([*p.residues[1].xyz(atom)]) for atom in pos_grp.atoms]
-        c = np.stack(coords)
-        pos_frame = np.linalg.inv(hbond_ray_pairs.get_frame_for_coords(c))
+            rsd = fxnl_grps[pos_info[0]]
+            pos_grp = pn.fxnl_groups[rsd]
 
-        xf = np.dot(pos_frame, xform)
-        tranform_pose(p, xf)
-        hits.append(p)
+            p = pyrosetta.Pose()
+            pyrosetta.make_pose_from_sequence(p, 'Z[{}]'.format(rsd), 'fa_standard')
+            coords = [np.array([*p.residues[1].xyz(atom)]) for atom in pos_grp.atoms]
+            c = np.stack(coords)
+            pos_frame = np.linalg.inv(hbond_ray_pairs.get_frame_for_coords(c))
+
+            xf = np.dot(pos_frame, xform)
+            pr.transform_pose(p, xf)
+            hits.append(p)
     return hits    
 
 
@@ -69,10 +74,7 @@ def look_for_sc_bb_bidentates(p):
         rsd = p.residues[i]
         H = _H_name(rsd)
 
-        n_ray = np.ones((4))
-        n_ray[:3] = np.array([*(rsd.xyz(H) - rsd.xyz('N'))])
-
-        #### Call the create_ray function to get this going!
+        n_ray = hbond_ray_pairs.create_ray(rsd.xyz(H), rsd.xyz('N'))
         c_ray = hbond_ray_pairs.create_ray(rsd.xyz('O'), rsd.xyz('C'))
         
 
@@ -80,15 +82,15 @@ def look_for_sc_bb_bidentates(p):
 
         if i != 1:
             prev_rsd = p.residues[i - 1]
-            prev_c = np.ones((4))
-            prev_c[:3] = np.array([*(prev_rsd.xyz('O') - prev_rsd.xyz('C'))])
+            prev_c = hbond_ray_pairs.create_ray(prev_rsd.xyz('O'), 
+                                                prev_rsd.xyz('C'))
             pairs_of_rays += [(n_ray, prev_c), (prev_c, n_ray)]
 
         if i != len(p.residues):
             next_rsd = p.residues[i + 1]
             H = _H_name(next_rsd)
-            next_n = np.ones((4))
-            next_n[:3] = np.array([*(next_rsd.xyz(H) - next_rsd.xyz('N'))])
+            next_n = hbond_ray_pairs.create_ray(next_rsd.xyz(H), 
+                                                next_rsd.xyz('N'))
             pairs_of_rays += [(next_n, c_ray), (c_ray, next_n)]
     return pairs_of_rays
 

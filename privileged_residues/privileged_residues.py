@@ -235,7 +235,7 @@ def laod_hash_tables_from_disk(fname=None):
     pos_frame = np.linalg.inv(hbond_ray_pairs.get_frame_for_coords(c))
 
     xf = np.dot(pos_frame, xform)
-    tranform_pose(p, xf)
+    pr.transform_pose(p, xf)
     # convert pose to ATOM records append all together and write them to a file
 
 
