@@ -29,6 +29,7 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
         except KeyError:
             continue
             
+        ray_frame = hbond_ray_pairs.get_frame_for_rays(r1, r2)
         # now positioning_info is a set of possible values
         fxnl_grps = list(pn.fxnl_groups.keys())
 
@@ -45,9 +46,9 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
             pyrosetta.make_pose_from_sequence(p, 'Z[{}]'.format(rsd), 'fa_standard')
             coords = [np.array([*p.residues[1].xyz(atom)]) for atom in pos_grp.atoms]
             c = np.stack(coords)
-            pos_frame = np.linalg.inv(hbond_ray_pairs.get_frame_for_coords(c))
 
-            xf = np.dot(pos_frame, xform)
+            pos_frame = hbond_ray_pairs.get_frame_for_coords(c)
+            xf = np.dot(np.dot(ray_frame, xform), np.linalg.inv(pos_frame))
             pr.transform_pose(p, xf)
             hits.append(p)
     return hits    
