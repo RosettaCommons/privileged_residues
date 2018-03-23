@@ -254,7 +254,7 @@ def find_privileged_interactions_in_pose(p):
     
     with open(ht_name_full, 'rb') as f:
         ht = pickle.load(f)
-        pairs_of_rays = bd.find_hashable_positions(p, ht)
+    pairs_of_rays = bd.find_hashable_positions(p, ht)
 
     return pairs_of_rays, ht
 
