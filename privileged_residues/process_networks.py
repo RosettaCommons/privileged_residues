@@ -324,8 +324,8 @@ def find_all_relevant_hbonds_for_pose(p):
     # ah, at last. this is where it gets a little tricky.
     # everything should be connected to everything else...
     #  , ray 1, ray 2, positioned rsd id, homogeneous transform to position rsd
-    entry_type = np.dtype([('it', 'u8'), ('r1', 'f8', (2, 4)),
-                           ('r2', 'f8', (2, 4)), ('id', 'u8'),
+    entry_type = np.dtype([('it', 'u8'), ('r1', 'f8', (4, 2)),
+                           ('r2', 'f8', (4, 2)), ('id', 'u8'),
                            ('ht', 'f8', (4, 4))])
 
     res_orderings = generate_combinations(len(p.residues))
