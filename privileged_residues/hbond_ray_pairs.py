@@ -135,9 +135,9 @@ def create_ray(center, base):
         2. The point at which the ray is centered is at `center`.
 
     Args:
-        center (numpy.array): A (2, 3) array representing the
+        center (numpy.array): A (1, 3) array representing the
             coordinate at which to center the resulting ray.
-        base (numpy.array): A (2, 3) array representing the base used
+        base (numpy.array): A (1, 3) array representing the base used
             to determine the direction of the resulting ray.
 
     Returns:
@@ -147,12 +147,12 @@ def create_ray(center, base):
     direction = center - base
     direction /= np.linalg.norm(direction)
 
-    ray = np.empty((2, 4))
-    ray[0][:-1] = center
-    ray[0][-1] = 1.  # point!
+    ray = np.empty((4, 2))
+    ray[:-1, 0] = center
+    ray[-1, 0] = 1.  # point!
 
-    ray[1][:-1] = direction
-    ray[1][-1] = 0.  # direction!
+    ray[:-1, 1] = direction
+    ray[-1, 1] = 0.  # point!
 
     return ray
 
