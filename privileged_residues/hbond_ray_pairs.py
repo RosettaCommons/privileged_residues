@@ -256,9 +256,9 @@ def hash_rays(r1, r2, resl=2, lever=10):
         `r1` and `r2` must be the same shape.
 
     Args:
-        r1 (numpy.array): An (N, 2, 4) array representing N rays in
+        r1 (numpy.array): An (N, 4, 2) array representing N rays in
             space each with a point and a unit direction.
-        r2 (numpy.array): An (N, 2, 4) array representing N rays in
+        r2 (numpy.array): An (N, 4, 2) array representing N rays in
             space each with a point and a unit direction.
 
     Returns:
@@ -332,20 +332,20 @@ def get_frame_for_rays(r1, r2):
         the point of r2 to lie in the xy-plane.
 
     Args:
-        r1 (numpy.array): A (2, 4) array representing a ray in space
+        r1 (numpy.array): A (4, 2) array representing a ray in space
             with a point and a unit direction.
-        r2 (numpy.array): A (2, 4) array representing a ray in space
+        r2 (numpy.array): A (4, 2) array representing a ray in space
             with a point and a unit direction.
 
     Returns:
         numpy.array: A (4, 4) array representing the coordinate frame
         as a homogenous transform.
     """
-    trans = r1[0]
-    x_hat = r1[1]
+    trans = r1[:, 0]
+    x_hat = r1[:, 1]
     assert_allclose(np.linalg.norm(x_hat), 1.)  # make sure this is unity
 
-    xy_pojnt = r2[0] - trans
+    xy_pojnt = r2[:, 0] - trans
     y_component = xy_pojnt - (np.dot(xy_pojnt, x_hat) * x_hat)
     y_hat = y_component / np.linalg.norm(y_component)
 
