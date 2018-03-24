@@ -285,7 +285,7 @@ def positioned_residue_is_donor(positioned, target):
 
     tgt = np.stack(tgt_rays)
     pos = np.stack(pos_rays)
-    dist = np.linalg.norm(tgt[:, np.newaxis, 0, :] - pos[np.newaxis, :, 0, :],
+    dist = np.linalg.norm(tgt[:, np.newaxis, :, 0] - pos[np.newaxis, :, :, 0],
                           axis=-1)
     tgt_idx, pos_idx = np.unravel_index(np.argmin(dist, axis=None), dist.shape)
 
