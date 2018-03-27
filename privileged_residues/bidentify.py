@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import itertools
 
 # The following packages are not pip-installable
 # The import calls are wrapped in a try/except block
@@ -57,14 +58,10 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
 def look_up_connected_network():
     pass 
 
-
 def look_for_sc_bb_bidentates(p):
     """
     """
     
-    def _H_name(r):
-        return 'H' if not r.name().endswith('NtermProteinFull') else '1H'
-
     pairs_of_rays = []
     for i in range(1, len(p.residues) + 1):
         # look at the amino and carboxyl rays, swap the order and look ahead
@@ -73,33 +70,87 @@ def look_for_sc_bb_bidentates(p):
 
 
         rsd = p.residues[i]
-        H = _H_name(rsd)
-
-        n_ray = hbond_ray_pairs.create_ray(rsd.xyz(H), rsd.xyz('N'))
-        c_ray = hbond_ray_pairs.create_ray(rsd.xyz('O'), rsd.xyz('C'))
         
+        # ray reference atoms in backbone
+        H = rsd.attached_H_begin(rsd.atom_index("N"))
+        N = rsd.first_adjacent_heavy_atom(H)
+        O = rsd.atom_index("O")
+        C = rsd.first_adjacent_heavy_atom(O)
+
+        n_ray = hbond_ray_pairs.create_ray(rsd.xyz(H), rsd.xyz(N))
+        c_ray = hbond_ray_pairs.create_ray(rsd.xyz(O), rsd.xyz(C))
 
         pairs_of_rays += [(n_ray, c_ray), (c_ray, n_ray)]
 
         if i != 1:
             prev_rsd = p.residues[i - 1]
-            prev_c = hbond_ray_pairs.create_ray(prev_rsd.xyz('O'), 
-                                                prev_rsd.xyz('C'))
+
+            O = prev_rsd.atom_index("O")
+            C = prev_rsd.first_adjacent_heavy_atom(O)
+
+            prev_c = hbond_ray_pairs.create_ray(prev_rsd.xyz(O), 
+                                                prev_rsd.xyz(C))
             pairs_of_rays += [(n_ray, prev_c), (prev_c, n_ray)]
 
         if i != len(p.residues):
             next_rsd = p.residues[i + 1]
-            H = _H_name(next_rsd)
+            H = next_rsd.attached_H_begin(rsd.atom_index("N"))
+            N = next_rsd.first_adjacent_heavy_atom(H)
             next_n = hbond_ray_pairs.create_ray(next_rsd.xyz(H), 
-                                                next_rsd.xyz('N'))
+                                                next_rsd.xyz(N))
             pairs_of_rays += [(next_n, c_ray), (c_ray, next_n)]
     return pairs_of_rays
 
+def look_for_sc_scbb_bidentates(p):
+    """
+    """
+    
+    pairs_of_rays = []
+    for rsd in p.residues:
+        H = rsd.attached_H_begin(rsd.atom_index("N"))
+        N = rsd.first_adjacent_heavy_atom(H)
+        O = rsd.atom_index("O")
+        C = rsd.first_adjacent_heavy_atom(O)
+
+        n_ray = hbond_ray_pairs.create_ray(rsd.xyz(H), rsd.xyz(N))
+        c_ray = hbond_ray_pairs.create_ray(rsd.xyz(O), rsd.xyz(C))
+
+        for i in rsd.Hpos_polar_sc():
+            ray = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.first_adjacent_heavy_atom(i)))
+
+            pairs_of_rays += [(n_ray, ray), (ray, n_ray)]
+            pairs_of_rays += [(c_ray, ray), (ray, c_ray)]
+
+        for i in rsd.accpt_pos_sc():
+            ray = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.first_adjacent_heavy_atom(i)))
+            
+            pairs_of_rays += [(n_ray, ray), (ray, n_ray)]
+            pairs_of_rays += [(c_ray, ray), (ray, c_ray)]
+
+    return pairs_of_rays
+
+def look_for_sc_sc_bidentates(p):
+    """
+    """
+
+    pairs_of_rays = []
+    for rsd in p.residues:
+        for (i, j) in itertools.permutations(list(rsd.Hpos_polar_sc()) + list(rsd.accpt_pos_sc()), 2):
+            if i == j:
+                continue
+
+            first = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.first_adjacent_heavy_atom(i)))
+            second = hbond_ray_pairs.create_ray(rsd.xyz(j), rsd.xyz(rsd.first_adjacent_heavy_atom(j)))
+
+            pairs_of_rays += [(first, second)]
+
+    return pairs_of_rays
 
 def find_hashable_positions(p, ht):
     # look up each type of privileged interaction
     #
     hits = []
+    pairs_of_rays = []
 
     # networks:
     #     iterate over pairs of residues with side chains that are 
@@ -107,17 +158,15 @@ def find_hashable_positions(p, ht):
     # Sc_Sc bidentates:
     #     iteratate over every residue, throw out non-bidentate capable 
     #     residues
+    pairs_of_rays += look_for_sc_sc_bidentates(p)
     # Sc_ScBb bidentates:
     #     iterate over pairs of neighboring residues on the surface
-    
+    pairs_of_rays += look_for_sc_scbb_bidentates(p)
     # Sc_Bb bidentates:
     #     iterate over pairs of neighboring residues on the surface
-    pairs_of_rays = look_for_sc_bb_bidentates(p)
+    pairs_of_rays += look_for_sc_bb_bidentates(p)
     # hits += look_up_interactions(pairs_of_rays, ht)
     
     # tmp
     return pairs_of_rays
-
-
-    
 

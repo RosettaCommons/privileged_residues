@@ -248,7 +248,7 @@ def find_privileged_interactions_in_pose(p):
     from . import position_residue as pr
 
     ht_name = 'Sc_Bb_02_0002_0000_Sc_Bb_0.1_2.0_16.0.pkl'
-    ht_path = path.expanduser('~/digs/bidentate_hbond_pdbs_2/hash_tables/Sc_Bb/02')
+    ht_path = path.expanduser('~weitzner/bidentate_hbond_pdbs_2/hash_tables/Sc_Bb/02')
     ht_name_full = path.join(ht_path, ht_name)
     table_data = pr._fname_to_HTD('Sc_Bb_0.1_2.0_16.0.pkl')
     
