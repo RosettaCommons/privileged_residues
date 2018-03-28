@@ -258,6 +258,3 @@ def find_privileged_interactions_in_pose(p):
 
     return pairs_of_rays, ht
 
-
-
-

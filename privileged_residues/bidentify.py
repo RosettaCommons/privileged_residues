@@ -55,9 +55,6 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
     return hits    
 
 
-def look_up_connected_network():
-    pass 
-
 def look_for_sc_bb_bidentates(p):
     """
     """
@@ -146,6 +143,31 @@ def look_for_sc_sc_bidentates(p):
 
     return pairs_of_rays
 
+def look_up_connected_network(p):
+    """
+    """
+
+    pairs_of_rays = []
+
+    hbondset = hbond_ray_pairs.identify_bonded_pairs(p, hbond_ray_pairs.find_hbonds(p))
+
+    for i in hbondset.hbonds():
+        don_res = p.residues[i.don_res()]
+        acc_res = p.residues[i.acc_res()]
+
+
+        for (j, k) in itertools.product(list(don_res.Hpos_polar_sc()) + list(don_res.accpt_pos_sc()), list(acc_res.Hpos_polar_sc()) + list(acc_res.accpt_pos_sc())):
+            if (j == k or j == i.don_index() or k == i.acc_index()):
+                continue
+
+            first = hbond_ray_pairs.create_ray(don_res.xyz(j), don_res.xyz(don_res.first_adjacent_heavy_atom(j)))
+            second = hbond_ray_pairs.create_ray(acc_res.xyz(k), acc_res.xyz(acc_res.first_adjacent_heavy_atom(k)))
+            
+            pairs_of_rays += [(first, second)]
+            pairs_of_rays += [(second, first)]
+
+    return pairs_of_rays
+
 def find_hashable_positions(p, ht):
     # look up each type of privileged interaction
     #
@@ -166,6 +188,7 @@ def find_hashable_positions(p, ht):
     #     iterate over pairs of neighboring residues on the surface
     pairs_of_rays += look_for_sc_bb_bidentates(p)
     # hits += look_up_interactions(pairs_of_rays, ht)
+    pairs_of_rays += look_up_connected_network(p)
     
     # tmp
     return pairs_of_rays
