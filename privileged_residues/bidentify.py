@@ -27,6 +27,7 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
         hashed_rays = int(hbond_ray_pairs.hash_rays(r1, r2))
         try:
             positioning_info = ht[hashed_rays]
+            print(positioning_info)
         except KeyError:
             continue
             
@@ -35,11 +36,15 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
         fxnl_grps = list(pn.fxnl_groups.keys())
 
         for pos_info in positioning_info:
-            xform = pr.get_ht_from_table(pos_info[1],
-                                         cart_resl,
-                                         ori_resl,
-                                         cart_bound)
-
+            xform = None
+            try:
+                xform = pr.get_ht_from_table(pos_info[1],
+                                             cart_resl,
+                                             ori_resl,
+                                             cart_bound)
+            except:
+                continue
+                
             rsd = fxnl_grps[pos_info[0]]
             pos_grp = pn.fxnl_groups[rsd]
 
@@ -70,9 +75,9 @@ def look_for_sc_bb_bidentates(p):
         
         # ray reference atoms in backbone
         H = rsd.attached_H_begin(rsd.atom_index("N"))
-        N = rsd.first_adjacent_heavy_atom(H)
+        N = rsd.atom_base(H)
         O = rsd.atom_index("O")
-        C = rsd.first_adjacent_heavy_atom(O)
+        C = rsd.atom_base(O)
 
         n_ray = hbond_ray_pairs.create_ray(rsd.xyz(H), rsd.xyz(N))
         c_ray = hbond_ray_pairs.create_ray(rsd.xyz(O), rsd.xyz(C))
@@ -105,21 +110,21 @@ def look_for_sc_scbb_bidentates(p):
     pairs_of_rays = []
     for rsd in p.residues:
         H = rsd.attached_H_begin(rsd.atom_index("N"))
-        N = rsd.first_adjacent_heavy_atom(H)
+        N = rsd.atom_base(H)
         O = rsd.atom_index("O")
-        C = rsd.first_adjacent_heavy_atom(O)
+        C = rsd.atom_base(O)
 
         n_ray = hbond_ray_pairs.create_ray(rsd.xyz(H), rsd.xyz(N))
         c_ray = hbond_ray_pairs.create_ray(rsd.xyz(O), rsd.xyz(C))
 
         for i in rsd.Hpos_polar_sc():
-            ray = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.first_adjacent_heavy_atom(i)))
+            ray = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.atom_base(i)))
 
             pairs_of_rays += [(n_ray, ray), (ray, n_ray)]
             pairs_of_rays += [(c_ray, ray), (ray, c_ray)]
 
         for i in rsd.accpt_pos_sc():
-            ray = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.first_adjacent_heavy_atom(i)))
+            ray = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.atom_base(i)))
             
             pairs_of_rays += [(n_ray, ray), (ray, n_ray)]
             pairs_of_rays += [(c_ray, ray), (ray, c_ray)]
@@ -136,8 +141,8 @@ def look_for_sc_sc_bidentates(p):
             if i == j:
                 continue
 
-            first = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.first_adjacent_heavy_atom(i)))
-            second = hbond_ray_pairs.create_ray(rsd.xyz(j), rsd.xyz(rsd.first_adjacent_heavy_atom(j)))
+            first = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.atom_base(i)))
+            second = hbond_ray_pairs.create_ray(rsd.xyz(j), rsd.xyz(rsd.atom_base(j)))
 
             pairs_of_rays += [(first, second)]
 
@@ -150,18 +155,22 @@ def look_up_connected_network(p):
     pairs_of_rays = []
 
     hbondset = hbond_ray_pairs.identify_bonded_pairs(p, hbond_ray_pairs.find_hbonds(p))
-
-    for i in hbondset.hbonds():
-        don_res = p.residues[i.don_res()]
-        acc_res = p.residues[i.acc_res()]
-
-
-        for (j, k) in itertools.product(list(don_res.Hpos_polar_sc()) + list(don_res.accpt_pos_sc()), list(acc_res.Hpos_polar_sc()) + list(acc_res.accpt_pos_sc())):
-            if (j == k or j == i.don_index() or k == i.acc_index()):
+    
+    for hbond in hbondset.hbonds():
+        don_res = p.residue(hbond.don_res())
+        acc_res = p.residue(hbond.acc_res())
+                
+        don_list = list(don_res.Hpos_polar_sc()) + list(don_res.accpt_pos_sc())
+        acc_list = list(acc_res.Hpos_polar_sc()) + list(acc_res.accpt_pos_sc())
+        
+        for (j, k) in itertools.product(don_list, acc_list):
+            if (j == hbond.don_hatm() or k == hbond.acc_atm()):
                 continue
+            
+            print(*((y, x.atom_name(x.atom_base(y))) for (x, y) in zip([don_res, acc_res], [j, k])))
 
-            first = hbond_ray_pairs.create_ray(don_res.xyz(j), don_res.xyz(don_res.first_adjacent_heavy_atom(j)))
-            second = hbond_ray_pairs.create_ray(acc_res.xyz(k), acc_res.xyz(acc_res.first_adjacent_heavy_atom(k)))
+            first = hbond_ray_pairs.create_ray(don_res.xyz(j), don_res.xyz(don_res.atom_base(j)))
+            second = hbond_ray_pairs.create_ray(acc_res.xyz(k), acc_res.xyz(acc_res.atom_base(k)))
             
             pairs_of_rays += [(first, second)]
             pairs_of_rays += [(second, first)]

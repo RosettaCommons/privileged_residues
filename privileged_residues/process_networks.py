@@ -127,22 +127,20 @@ def get_models_from_file(fname):
         models.
     """
     with open(fname, 'r') as f:
-        atom_records = [l.rstrip() for l in f.readlines()
-                        if not l.startswith('#')]
-
-    models = []
-    current_model = []
-    for record in atom_records:
-        current_model.append(record)
-        if record == 'ENDMDL':
-            models.append(current_model)
-            current_model = []
-
-    # if the last line in the file is not 'ENDMDL' it needs to be added to the
-    # list here.
-    if len(current_model) != 0:
-        models.append(current_model)
-    return models
+        model = []
+        for l in f:
+            if (l.startswith("#")):
+                continue
+                
+            line = l.rstrip()
+            model.append(line)
+            
+            if (line.startswith("ENDMDL")):
+                yield model
+                model = []
+        
+        if (len(model) > 0):
+            yield model
 
 
 def pose_from_atom_records(atom_recs):
