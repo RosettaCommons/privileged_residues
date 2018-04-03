@@ -332,6 +332,12 @@ def find_all_relevant_hbonds_for_pose(p):
     second = []
     hash_types = []
 
+    # it some poses have too many residues in them, presumably the result of 
+    # some strange race condition in an upstream process. Since the data are
+    # somewhat nonsensical, I am just going to skip these poses entirely.
+    if len(p.residues) != 3:
+        return hash_types
+
     fxnl_grps = list(fxnl_groups.keys())
     for interactions in res_orderings:
         # look at the order, figure out which hydrogen bonds to use
