@@ -94,6 +94,8 @@ Attributes:
 # helper functions for identifying hbond partners
 def _get_atom_id_pair(rsd, atmno):
     base_atmno = rsd.atom_base(atmno)
+    if rsd.name() == 'OH_' and atmno == 2:
+        base_atmno = 1
     return AtomIDPair(AtomID(atmno, rsd.seqpos()),
                       AtomID(base_atmno, rsd.seqpos()))
 
