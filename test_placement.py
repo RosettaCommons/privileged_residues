@@ -7,7 +7,7 @@ from privileged_residues import bidentify as bd
 init()
 
 cart_resl, ori_resl, cart_bound = 0.1, 2.0, 16.0
-p = pyrosetta.pose_from_file('sc_bb_example.pdb')
+p = pyrosetta.pose_from_file('sc_bb_example_with_bidentate.pdb')
 pairs, ht = privileged_residues.find_privileged_interactions_in_pose(p)
 
 hits = bd.look_up_interactions(pairs, ht, cart_resl, ori_resl, cart_bound)
