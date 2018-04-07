@@ -84,8 +84,8 @@ def get_ht_from_table(bin, cart_resl, ori_resl, cart_bound):
     return xh.get_center([bin])['raw'].squeeze()
 
 
-def tranform_pose(p, xform):
-    """Tranform the atomic coordinates of Pose by a specified
+def transform_pose(p, xform):
+    """Transform the atomic coordinates of Pose by a specified
     homogenous tranform.
 
     Args:
@@ -96,8 +96,7 @@ def tranform_pose(p, xform):
     coords = []
     for i in range(1, p.size() + 1):
         for j in range(1, p.residues[i].natoms() + 1):
-            c = np.ones(4)
-            c[:3] = np.array([*p.residues[i].xyz(j)])
+            c = np.array([*p.residues[i].xyz(j)] + [1])
             coords.append(c)
 
     new_coords = np.dot(xform, np.stack(coords).T)
@@ -108,6 +107,7 @@ def tranform_pose(p, xform):
             x, y, z = tuple(c for c in new_coords[:3, tot_atoms])
             p.residues[i].atom(j).xyz(xyzVec(x, y, z))
             tot_atoms += 1
+
 
 if __name__ == '__main__':
     print('Don\'t execute me, bruh.')

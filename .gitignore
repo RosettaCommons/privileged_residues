@@ -60,3 +60,20 @@ target/
 
 # pyenv python configuration file
 .python-version
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# swap
+.sw[a-p]
+.*.sw[a-p]
+# session
+Session.vim
+# temporary
+.netrwhist
+*~
+tags
+
+local/
+

@@ -135,9 +135,9 @@ def create_ray(center, base):
         2. The point at which the ray is centered is at `center`.
 
     Args:
-        center (numpy.array): A (2, 3) array representing the
+        center (numpy.array): A (1, 3) array representing the
             coordinate at which to center the resulting ray.
-        base (numpy.array): A (2, 3) array representing the base used
+        base (numpy.array): A (1, 3) array representing the base used
             to determine the direction of the resulting ray.
 
     Returns:
@@ -147,12 +147,12 @@ def create_ray(center, base):
     direction = center - base
     direction /= np.linalg.norm(direction)
 
-    ray = np.empty((2, 4))
-    ray[0][:-1] = center
-    ray[0][-1] = 1.  # point!
+    ray = np.empty((4, 2))
+    ray[:-1, 0] = center
+    ray[-1, 0] = 1.  # point!
 
-    ray[1][:-1] = direction
-    ray[1][-1] = 0.  # direction!
+    ray[:-1, 1] = direction
+    ray[-1, 1] = 0.  # point!
 
     return ray
 
@@ -256,9 +256,9 @@ def hash_rays(r1, r2, resl=2, lever=10):
         `r1` and `r2` must be the same shape.
 
     Args:
-        r1 (numpy.array): An (N, 2, 4) array representing N rays in
+        r1 (numpy.array): An (N, 4, 2) array representing N rays in
             space each with a point and a unit direction.
-        r2 (numpy.array): An (N, 2, 4) array representing N rays in
+        r2 (numpy.array): An (N, 4, 2) array representing N rays in
             space each with a point and a unit direction.
 
     Returns:
@@ -298,7 +298,7 @@ def get_frame_for_coords(coords):
 
     assert(coords.shape == (3, 3))
 
-    frame = np.empty((4, 4))
+    frame = np.zeros((4, 4))
     frame[:3, 3] = coords[2]
     frame[3, 3] = 1.
 
@@ -309,7 +309,7 @@ def get_frame_for_coords(coords):
     y_hat = coords[0] - coords[1]
     y_hat -= np.dot(y_hat, z_hat) * z_hat
     y_hat /= np.linalg.norm(y_hat)
-    assert_allclose(np.dot(y_hat, z_hat), 0.)
+    assert_allclose(np.dot(y_hat, z_hat), 0., atol=1E-10)
 
     frame[:3, 1] = y_hat
 
@@ -332,20 +332,20 @@ def get_frame_for_rays(r1, r2):
         the point of r2 to lie in the xy-plane.
 
     Args:
-        r1 (numpy.array): A (2, 4) array representing a ray in space
+        r1 (numpy.array): A (4, 2) array representing a ray in space
             with a point and a unit direction.
-        r2 (numpy.array): A (2, 4) array representing a ray in space
+        r2 (numpy.array): A (4, 2) array representing a ray in space
             with a point and a unit direction.
 
     Returns:
         numpy.array: A (4, 4) array representing the coordinate frame
         as a homogenous transform.
     """
-    trans = r1[0]
-    x_hat = r1[1]
+    trans = r1[:, 0]
+    x_hat = r1[:, 1]
     assert_allclose(np.linalg.norm(x_hat), 1.)  # make sure this is unity
 
-    xy_pojnt = r2[0] - trans
+    xy_pojnt = r2[:, 0] - trans
     y_component = xy_pojnt - (np.dot(xy_pojnt, x_hat) * x_hat)
     y_hat = y_component / np.linalg.norm(y_component)
 

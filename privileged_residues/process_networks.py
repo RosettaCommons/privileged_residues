@@ -9,6 +9,7 @@ from numpy.testing import assert_allclose
 # The import calls are wrapped in a try/except block
 try:
     import pyrosetta
+    from pyrosetta.rosetta.core.id import AtomID
 except ImportError:
     print('Module "pyrosetta" not found in the current environment! '
           'Go to http://www.pyrosetta.org to download it.')
@@ -23,6 +24,8 @@ except ImportError:
     pass
 
 from . import hbond_ray_pairs
+from . import rotation_matrix
+
 
 # the order of the keys of this dictionary
 FxnlGrp = namedtuple('FxnlGrp', ['resName', 'donor', 'acceptor', 'atoms'])
@@ -88,6 +91,25 @@ Attributes:
 """
 
 
+# helper functions for identifying hbond partners
+def _get_atom_id_pair(rsd, atmno):
+    base_atmno = rsd.atom_base(atmno)
+    if rsd.name() == 'OH_' and atmno == 2:
+        base_atmno = 1
+    return AtomIDPair(AtomID(atmno, rsd.seqpos()),
+                      AtomID(base_atmno, rsd.seqpos()))
+
+
+def _vector_from_id(atom_id, rsd):
+    return np.array([*rsd.xyz(atom_id.atomno())])
+
+
+def _positioning_ray(rsd, atmno):
+    id_pair = _get_atom_id_pair(rsd, atmno)
+    return hbond_ray_pairs.create_ray(_vector_from_id(id_pair.center, rsd),
+                                      _vector_from_id(id_pair.base, rsd))
+
+
 def get_models_from_file(fname):
     """Read a PDB-formatted file and return a list of ATOM records
     grouped by model.
@@ -107,21 +129,20 @@ def get_models_from_file(fname):
         models.
     """
     with open(fname, 'r') as f:
-        atom_records = [l.rstrip() for l in f.readlines()]
-
-    models = []
-    current_model = []
-    for record in atom_records:
-        current_model.append(record)
-        if record == 'ENDMDL':
-            models.append(current_model)
-            current_model = []
-
-    # if the last line in the file is not 'ENDMDL' it needs to be added to the
-    # list here.
-    if len(current_model) != 0:
-        models.append(current_model)
-    return models
+        model = []
+        for l in f:
+            if (l.startswith("#")):
+                continue
+                
+            line = l.rstrip()
+            model.append(line)
+            
+            if (line.startswith("ENDMDL")):
+                yield model
+                model = []
+        
+        if (len(model) > 0):
+            yield model
 
 
 def pose_from_atom_records(atom_recs):
@@ -199,21 +220,6 @@ def rays_for_interaction(donor, acceptor, interaction):
         describing the stationary and positioned residues,
         respectively.
     """
-    from pyrosetta.rosetta.core.id import AtomID
-
-    def _get_atom_id_pair(rsd, atmno):
-        base_atmno = rsd.atom_base(atmno)
-        return AtomIDPair(AtomID(atmno, rsd.seqpos()),
-                          AtomID(base_atmno, rsd.seqpos()))
-
-    def _vector_from_id(atom_id, rsd):
-        return np.array([*rsd.xyz(atom_id.atomno())])
-
-    def _positioning_ray(rsd, atmno):
-        id_pair = _get_atom_id_pair(rsd, atmno)
-        return hbond_ray_pairs.create_ray(_vector_from_id(id_pair.center, rsd),
-                                          _vector_from_id(id_pair.base, rsd))
-
     don_rays = []
     for i in range(1, donor.natoms() + 1):
         # in case we use full residues later on
@@ -245,6 +251,51 @@ def rays_for_interaction(donor, acceptor, interaction):
     return target, positioned_residue
 
 
+def positioned_residue_is_donor(positioned, target):
+    """Determine whether the residue positioned by the hydrogen bond of
+    interest is the donor and return True if it is.
+
+    Args:
+        positioned (pyrosetta.rosetta.core.conformation.Residue): The
+            residue that is positioned by the hydrogen bond.
+        target (pyrosetta.rosetta.core.conformation.Residue): The
+            residue that is having a hydrogen bonding ray extracted
+            from it.
+    Returns:
+        bool: True if positioned residue is the hydrogen bond donor,
+        False if it is the acceptor.
+
+        If the function cannot determine which residue is the donor, it
+        returns None.
+    """
+    def _get_all_rays(rsd):
+        rays = []
+        atms = []
+        for i in range(1, rsd.natoms() + 1):
+            # in case we use full residues later on
+            if rsd.atom_is_backbone(i):
+                continue
+            if rsd.atom_type(i).element() in ('N', 'O', 'H'):
+                rays.append(_positioning_ray(rsd, i))
+                atms.append(i)
+        return rays, atms
+
+    tgt_rays, tgt_atms = _get_all_rays(target)
+    pos_rays, pos_atms = _get_all_rays(positioned)
+
+    tgt = np.stack(tgt_rays)
+    pos = np.stack(pos_rays)
+    dist = np.linalg.norm(tgt[:, np.newaxis, :, 0] - pos[np.newaxis, :, :, 0],
+                          axis=-1)
+    tgt_idx, pos_idx = np.unravel_index(np.argmin(dist, axis=None), dist.shape)
+
+    if positioned.atom_type(pos_atms[pos_idx]).element() == 'H':
+        return True
+    elif target.atom_type(tgt_atms[tgt_idx]).element() == 'H':
+        return False
+    return None
+
+
 def find_all_relevant_hbonds_for_pose(p):
     """Enumerate all possible arrangements of residues in a Pose of a
     closed hydrogen-bonded network of residues, pack the arrangment
@@ -273,8 +324,8 @@ def find_all_relevant_hbonds_for_pose(p):
     # ah, at last. this is where it gets a little tricky.
     # everything should be connected to everything else...
     #  , ray 1, ray 2, positioned rsd id, homogeneous transform to position rsd
-    entry_type = np.dtype([('it', 'u8'), ('r1', 'f8', (2, 4)),
-                           ('r2', 'f8', (2, 4)), ('id', 'u8'),
+    entry_type = np.dtype([('it', 'u8'), ('r1', 'f8', (4, 2)),
+                           ('r2', 'f8', (4, 2)), ('id', 'u8'),
                            ('ht', 'f8', (4, 4))])
 
     res_orderings = generate_combinations(len(p.residues))
@@ -282,6 +333,12 @@ def find_all_relevant_hbonds_for_pose(p):
     first = []
     second = []
     hash_types = []
+
+    # it some poses have too many residues in them, presumably the result of 
+    # some strange race condition in an upstream process. Since the data are
+    # somewhat nonsensical, I am just going to skip these poses entirely.
+    if len(p.residues) != 3:
+        return hash_types
 
     fxnl_grps = list(fxnl_groups.keys())
     for interactions in res_orderings:
@@ -312,11 +369,15 @@ def find_all_relevant_hbonds_for_pose(p):
                 donor, acceptor = (p.residues[i] for i in res_nos)
                 ht.append('acceptor')
             else:
-                print('Ambiguous arrangement: both can donate & accept!')
-                print('Trying something a little more complicated...')
-                print('Oh shit, I should probably implement this!')
-                import sys
-                sys.exit(1)
+                par_rsd = p.residues[interaction.partner]
+                pos_don = positioned_residue_is_donor(pos_rsd, par_rsd)
+                assert(pos_don is not None)
+                if pos_don:
+                    donor, acceptor = pos_rsd, par_rsd
+                    ht.append('acceptor')
+                else:
+                    acceptor, donor = pos_rsd, par_rsd
+                    ht.append('donor')
 
             target, pos = rays_for_interaction(donor, acceptor, interaction)
             first.append(target) if i == 0 else second.append(target)
@@ -329,16 +390,36 @@ def find_all_relevant_hbonds_for_pose(p):
         c = [np.array([*pos_rsd.xyz(atom)]) for atom in pos_fxnl_grp.atoms]
         pos_frame = hbond_ray_pairs.get_frame_for_coords(np.stack(c))
         frame_to_store = np.dot(np.linalg.inv(ray_frame), pos_frame)
-        assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store))
+        assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store),
+                        atol=1E-10)
+        array_size = 1
+        if pos_fxnl_grp.resName == 'hydroxide':
+            # hydroxide only has two clearly positioned atoms
+            # the positioned frame needs to be rotated about the OH--HH bond
+            # to fill out the relevant orientations.
+            # the rotation will be centered on the hydrogen.
+            resl = 5.  # degrees
+
+            rot_cntr = np.array([*pos_rsd.xyz('HH')])
+            axis = np.array([*pos_rsd.xyz('OH')]) - rot_cntr
+            angles = np.arange(0., 360., resl)
+            r = rotation_matrix.rot_ein(axis, angles, degrees=True,
+                                        center=rot_cntr)
+            assert(r.shape == (int(360. / resl),) + (4, 4))
+
+            frame_to_store = r * frame_to_store
+            array_size = frame_to_store.shape[0]
 
         # store a tuple of the Rays and the positioning information.
         # pop first and second upon constructing entry to prepare for the
         # next iteration
-        hash_types.append(np.array((interaction_types.index(table),
-                                    first.pop(), second.pop(),
-                                    fxnl_grps.index(pos_rsd.name3()),
-                                    frame_to_store),
-                                   dtype=entry_type))
+        res = np.empty(array_size, dtype=entry_type)
+        res['it'] = interaction_types.index(table)
+        res['r1'] = first.pop()
+        res['r2'] = second.pop()
+        res['id'] = fxnl_grps.index(pos_rsd.name3())
+        res['ht'] = frame_to_store
+        hash_types.extend(res)
 
     return hash_types
 
