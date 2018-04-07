@@ -13,6 +13,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'Click>=6.0',
+    'more_itertools',
     # TODO: put package requirements here
 ]
 
@@ -28,12 +29,12 @@ test_requirements = [
 
 setup(
     name='privileged_residues',
-    version='0.1.0',
+    version='0.2.3',
     description="Privileged Residues contains methods for placing residues on the surface of a target protein that can be added to a RIF.",
     long_description=readme + '\n\n' + history,
     author="Brian D. Weitzner",
     author_email='weitzner@uw.edu',
-    url='https://github.com/weitzner/privileged_residues',
+    url='https://github.com/RosettaCommons/privileged_residues',
     packages=find_packages(include=['privileged_residues']),
     entry_points={
         'console_scripts': [
