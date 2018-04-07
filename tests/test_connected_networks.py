@@ -6,6 +6,8 @@ import pytest
 
 from glob import glob
 from os import path
+from privileged_residues.privileged_residues import HAVE_PYROSETTA
+
 
 pdb = path.expanduser("~weitzner/three_res_hbnet/arrangements/imidazole_carboxylate_amide/functional_stubs.pdb")
 
@@ -92,6 +94,7 @@ def _network_bidentate_placement(inpdb):
                 found = found or dist < 1.0
             
         assert(found)
-
+@pytest.mark.skipif('not HAVE_PYROSETTA')
 def test_network_bidentate_placement():
     _network_bidentate_placement(pdb)
+

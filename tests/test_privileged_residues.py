@@ -9,7 +9,7 @@ from click.testing import CliRunner
 
 from privileged_residues import privileged_residues
 from privileged_residues import cli
-
+from privileged_residues.privileged_residues import HAVE_PYROSETTA
 
 @pytest.fixture
 def response():
@@ -67,10 +67,12 @@ def _test_sc_bb_bidentate_placement(fname):
     assert(False)
 
 
+@pytest.mark.skipif('not HAVE_PYROSETTA')
 def test_sc_bb_bidentate_placement():
     _test_sc_bb_bidentate_placement('sc_bb_example_with_bidentate.pdb')
 
 
+@pytest.mark.skipif('not HAVE_PYROSETTA')
 def test_sc_bb_bidentate_placement_transformed():
     _test_sc_bb_bidentate_placement('transformed_example.pdb')
     
