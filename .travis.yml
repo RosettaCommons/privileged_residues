@@ -19,7 +19,7 @@ deploy:
       VzNZT242Mk5taVFla3pkOXlCQ2lBMlFNL3pMK1JZK3dtVW5BOWJuSzdKYlBMeFVBNGJseS9PTnc9
   true:
     python: 3.6
-    repo: weitzner/privileged_residues
+    repo: RosettaCommons/privileged_residues
     tags: true
 install: pip install -U tox-travis
 language: python
