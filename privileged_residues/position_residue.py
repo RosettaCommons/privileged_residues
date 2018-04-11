@@ -8,6 +8,7 @@ from os import path
 # The import calls are wrapped in a try/except block
 try:
     import pyrosetta
+    import pyrosetta.rosetta.core.scoring as scoring
 except ImportError:
     print('Module "pyrosetta" not found in the current environment! '
           'Go to http://www.pyrosetta.org to download it.')
@@ -37,7 +38,6 @@ Attributes:
         20 * cart_resl.
     cart_bound (float): The bounds of the lattice.
 """
-
 
 def _fname_to_HTD(fname_string):
     """Convert the filename of a pickled hash table to a HashTableData
@@ -108,6 +108,36 @@ def transform_pose(p, xform):
             p.residues[i].atom(j).xyz(xyzVec(x, y, z))
             tot_atoms += 1
 
+def filter_clashes_and_minimize(p, hits, clash_cutoff=35.0, sfx=None, mmap=None):
+    if (not sfx):
+        sfx = pyrosetta.rosetta.core.scoring.ScoreFunctionFactory.create_score_function("beta_nov16")
+
+        sfx.set_weight(scoring.hbond_bb_sc, 2.0)
+        sfx.set_weight(scoring.hbond_sc, 2.0)
+
+    if (not mmap):
+        mmap = pyrosetta.rosetta.core.kinematics.MoveMap()
+
+        mmap.set_bb(False)
+        mmap.set_chi(False)
+        mmap.set_jump(1, True)
+
+    minmov = pyrosetta.rosetta.protocols.minimization_packing.MinMover(mmap, sfx, "dfpmin_armijo_nonmonotone", 0.01, False)
+
+    for hit in hits:
+        proto_pose = p.clone()
+        proto_pose.append_pose_by_jump(hit, len(proto_pose.residues))
+
+        sfx(proto_pose)
+
+        fa_rep = proto_pose.energies().total_energies()[scoring.fa_rep]
+
+        if (fa_rep > clash_cutoff):
+            continue
+
+        minmov.apply(proto_pose)
+
+        yield proto_pose
 
 if __name__ == '__main__':
     print('Don\'t execute me, bruh.')
