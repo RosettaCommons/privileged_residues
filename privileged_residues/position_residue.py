@@ -8,6 +8,7 @@ from os import path
 # The import calls are wrapped in a try/except block
 try:
     import pyrosetta
+    import pyrosetta.rosetta.core.scoring as scoring
 except ImportError:
     print('Module "pyrosetta" not found in the current environment! '
           'Go to http://www.pyrosetta.org to download it.')
@@ -107,9 +108,7 @@ def transform_pose(p, xform):
             p.residues[i].atom(j).xyz(xyzVec(x, y, z))
             tot_atoms += 1
 
-def filter_clashes_and_minimize(p, hits, sfx=None, mmap=None):
-    out_poses = []
-    
+def filter_clashes_and_minimize(p, hits, clash_cutoff=35.0, sfx=None, mmap=None):
     if (not sfx):
         sfx = pyrosetta.rosetta.core.scoring.ScoreFunctionFactory.create_score_function("beta_nov16")
 
@@ -133,12 +132,12 @@ def filter_clashes_and_minimize(p, hits, sfx=None, mmap=None):
 
         fa_rep = proto_pose.energies().total_energies()[scoring.fa_rep]
 
-        if (fa_rep > 35.0):
+        if (fa_rep > clash_cutoff):
             continue
 
         minmov.apply(proto_pose)
 
-        out_poses.append(proto_pose)
+        yield proto_pose
 
 if __name__ == '__main__':
     print('Don\'t execute me, bruh.')
