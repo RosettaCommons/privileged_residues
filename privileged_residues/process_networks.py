@@ -46,7 +46,7 @@ Attributes:
 
 fxnl_groups = OrderedDict(sorted({'OH_': FxnlGrp('hydroxide', True, True,
                                                  ['CV', 'OH', 'HH']),
-                                  'G__': FxnlGrp('guanidium', True, False,
+                                  'G__': FxnlGrp('guanidinium', True, False,
                                                  ['CZ', 'NH1', 'NH2']),
                                   'I__': FxnlGrp('imidazole', True, True,
                                                  ['ND1', 'CD2', 'NE2']),
