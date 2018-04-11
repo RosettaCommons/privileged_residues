@@ -32,7 +32,7 @@ def _init_pyrosetta():
     from . import process_networks as pn
     params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
                          pn.fxnl_groups.items()]
-    opts = ['-ignore_waters false', '-mute core',
+    opts = ['-corrections::beta_nov16', '-ignore_waters false', '-mute core',
             '-extra_res_fa {}'.format(' '.join(params_files_list))]
     pyrosetta.init(extra_options=' '.join(opts),
                    set_logging_handler=_logging_handler)

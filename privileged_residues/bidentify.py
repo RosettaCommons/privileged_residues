@@ -1,12 +1,14 @@
 import os
 import numpy as np
 import itertools
+import random
 
 # The following packages are not pip-installable
 # The import calls are wrapped in a try/except block
 try:
     import pyrosetta
     from pyrosetta.rosetta.core.id import AtomID
+    from pyrosetta.rosetta.core.conformation import ResidueFactory
 except ImportError:
     print('Module "pyrosetta" not found in the current environment! '
           'Go to http://www.pyrosetta.org to download it.')
@@ -17,17 +19,21 @@ from . import hbond_ray_pairs
 from . import position_residue as pr
 from . import process_networks as pn
 
+_SAMPLE_SIZE = 100
+
 # the object of this submodule is to scan over all surface residues and 
 # identify pairs of rays to look up in each hash table
 def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
     """
     """
-    hits = []
+    residue_type_set = pyrosetta.rosetta.core.chemical.ChemicalManager.get_instance().residue_type_set("fa_standard")
+    dummy_pose = pyrosetta.pose_from_sequence("A", "fa_standard")
+    
     for r1, r2 in pairs_of_rays:
         hashed_rays = int(hbond_ray_pairs.hash_rays(r1, r2))
         try:
             positioning_info = ht[hashed_rays]
-            print(positioning_info)
+            #print(positioning_info)
         except KeyError:
             continue
             
@@ -35,7 +41,7 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
         # now positioning_info is a set of possible values
         fxnl_grps = list(pn.fxnl_groups.keys())
 
-        for pos_info in positioning_info:
+        for pos_info in random.sample(positioning_info, min(_SAMPLE_SIZE, len(positioning_info))):
             xform = None
             try:
                 xform = pr.get_ht_from_table(pos_info[1],
@@ -47,30 +53,32 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
                 
             rsd = fxnl_grps[pos_info[0]]
             pos_grp = pn.fxnl_groups[rsd]
-
-            p = pyrosetta.Pose()
-            pyrosetta.make_pose_from_sequence(p, 'Z[{}]'.format(rsd), 'fa_standard')
-            coords = [np.array([*p.residues[1].xyz(atom)]) for atom in pos_grp.atoms]
+            
+            dummy_pose.replace_residue(1, ResidueFactory.create_residue(residue_type_set.name_map(rsd)), False)
+            
+            coords = [np.array([*dummy_pose.residues[1].xyz(atom)]) for atom in pos_grp.atoms]
             c = np.stack(coords)
 
             pos_frame = hbond_ray_pairs.get_frame_for_coords(c)
             xf = np.dot(np.dot(ray_frame, xform), np.linalg.inv(pos_frame))
-            pr.transform_pose(p, xf)
-            hits.append(p)
-    return hits    
+            pr.transform_pose(dummy_pose, xf)
+            yield dummy_pose.clone()
 
 
-def look_for_sc_bb_bidentates(p):
+def look_for_sc_bb_bidentates(p, selector = pyrosetta.rosetta.core.select.residue_selector.TrueResidueSelector()):
     """
     """
     
     pairs_of_rays = []
+    targets = selector.apply(p)
     for i in range(1, len(p.residues) + 1):
+        if (not targets[i]):
+            continue
+                        
         # look at the amino and carboxyl rays, swap the order and look ahead
         # and back to see if the previous residue's carboxyl or the next 
         # residue's amino ray can be used to place a bidentate interaction
-
-
+        
         rsd = p.residues[i]
         
         # ray reference atoms in backbone
@@ -103,12 +111,16 @@ def look_for_sc_bb_bidentates(p):
             pairs_of_rays += [(next_n, c_ray), (c_ray, next_n)]
     return pairs_of_rays
 
-def look_for_sc_scbb_bidentates(p):
+def look_for_sc_scbb_bidentates(p, selector = pyrosetta.rosetta.core.select.residue_selector.TrueResidueSelector()):
     """
     """
     
     pairs_of_rays = []
+    targets = selector.apply(p)
     for rsd in p.residues:
+        if (not targets[rsd.seqpos()]):
+            continue
+        
         H = rsd.attached_H_begin(rsd.atom_index("N"))
         N = rsd.atom_base(H)
         O = rsd.atom_index("O")
@@ -131,12 +143,15 @@ def look_for_sc_scbb_bidentates(p):
 
     return pairs_of_rays
 
-def look_for_sc_sc_bidentates(p):
+def look_for_sc_sc_bidentates(p, selector = pyrosetta.rosetta.core.select.residue_selector.TrueResidueSelector()):
     """
     """
 
     pairs_of_rays = []
+    targets = selector.apply(p)
     for rsd in p.residues:
+        if (not targets[rsd.seqpos()]):
+            continue
         for (i, j) in itertools.permutations(list(rsd.Hpos_polar_sc()) + list(rsd.accpt_pos_sc()), 2):
             if i == j:
                 continue
@@ -197,7 +212,7 @@ def find_hashable_positions(p, ht):
     #     iterate over pairs of neighboring residues on the surface
     pairs_of_rays += look_for_sc_bb_bidentates(p)
     # hits += look_up_interactions(pairs_of_rays, ht)
-    pairs_of_rays += look_up_connected_network(p)
+    #pairs_of_rays += look_up_connected_network(p)
     
     # tmp
     return pairs_of_rays
