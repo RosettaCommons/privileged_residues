@@ -69,10 +69,10 @@ def _test_sc_bb_bidentate_placement(fname):
 
 @pytest.mark.skipif('not HAVE_PYROSETTA')
 def test_sc_bb_bidentate_placement():
-    _test_sc_bb_bidentate_placement('sc_bb_example_with_bidentate.pdb')
+    _test_sc_bb_bidentate_placement('tests/data/sc_bb_example_with_bidentate.pdb')
 
 
 @pytest.mark.skipif('not HAVE_PYROSETTA')
 def test_sc_bb_bidentate_placement_transformed():
-    _test_sc_bb_bidentate_placement('transformed_example.pdb')
+    _test_sc_bb_bidentate_placement('tests/data/transformed_example.pdb')
     

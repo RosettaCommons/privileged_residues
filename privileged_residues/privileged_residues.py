@@ -254,10 +254,16 @@ def find_privileged_interactions_in_pose(p):
     from . import bidentify as bd
     from . import position_residue as pr
 
-    ht_name = 'Sc_Bb_02_0002_0000_Sc_Bb_0.1_2.0_16.0.pkl'
-    ht_path = path.expanduser('~weitzner/bidentate_hbond_pdbs_2/hash_tables/Sc_Bb/02')
+    ht_name = 'Sc_Bb_0.1_2.0_16.0.pkl'
+
+    # this is a little hacky, but it makes my life easier for now:
+    # ep -> extra path
+    import sys
+    ep = 'digs/' if sys.platform == 'darwin' else ''
+
+    ht_path = path.expanduser('~weitzner/{}bidentate_hbond_pdbs_2/hash_tables'.format(ep))
     ht_name_full = path.join(ht_path, ht_name)
-    table_data = pr._fname_to_HTD('Sc_Bb_0.1_2.0_16.0.pkl')
+    table_data = pr._fname_to_HTD(ht_name)
     
     with open(ht_name_full, 'rb') as f:
         ht = pickle.load(f)
