@@ -393,7 +393,7 @@ def find_all_relevant_hbonds_for_pose(p):
         assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store),
                         atol=1E-10)
         array_size = 1
-        '''
+        
         if pos_fxnl_grp.resName == 'hydroxide':
             # hydroxide only has two clearly positioned atoms
             # the positioned frame needs to be rotated about the OH--HH bond
@@ -408,10 +408,12 @@ def find_all_relevant_hbonds_for_pose(p):
                                         center=rot_cntr)
             assert(r.shape == (int(360. / resl),) + (4, 4))
 
-            frame_to_store = r * frame_to_store
-            print(frame_to_store)
+            frame_to_store = np.matmul(np.linalg.inv(ray_frame)[np.newaxis, :],
+                                       np.dot(r, pos_frame))
+            assert_allclose(pos_frame, np.dot(ray_frame, frame_to_store[0]),
+                            atol=1E-10)
             array_size = frame_to_store.shape[0]
-        '''
+        
         # store a tuple of the Rays and the positioning information.
         # pop first and second upon constructing entry to prepare for the
         # next iteration
