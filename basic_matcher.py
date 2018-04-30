@@ -23,6 +23,13 @@ def make_parser():
 
     parser.add_argument("--outpath", dest="outpath", type=str, default=None, help="Output path")
 
+    parser.add_argument("--residues", dest="residues", type=int, default=None, nargs="*", help="Residue indices")
+
+    parser.add_argument("--clash-cutoff", dest="clash_cutoff", type=float, default=35., help="Tolerance for clash checking")
+
+    parser.add_argument("--n-best", dest="n_best", type=int, default=10, help="Number of top interactions to isolate")
+	parser.add_argument("--params", dest="params", type=str, nargs="*", help="Additional parameter files")
+
     return parser
 
 if __name__ == "__main__":
@@ -30,7 +37,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    init()
+    params_files_list = [path.join("/home/onalant/source/privileged_residues/privileged_residues/data/functional_groups", t.resName) + '.params' for _, t in process_networks.fxnl_groups.items()] + args.params
+
+    opts = ['-corrections::beta_nov16', '-ignore_waters false', '-mute core', '-extra_res_fa {}'.format(' '.join(params_files_list)), '-constant_seed', '-output_virtual']
+
+    pyrosetta.init(extra_options=' '.join(opts))
 
     params = (args.cart_resl, args.ori_resl, args.cart_bound)
     ht_name = 'Sc_Sc_%.1f_%.1f_%.1f.pkl' % params
