@@ -163,32 +163,33 @@ def look_for_sc_sc_bidentates(p, selector = pyrosetta.rosetta.core.select.residu
 
     return pairs_of_rays
 
-def look_up_connected_network(p):
-    """
-    """
+def look_up_connected_network(p, selector = pyrosetta.rosetta.core.select.residue_selector.TrueResidueSelector(),
+    accA = False,
+    donA = False,
+    accB = False,
+    donB = False):
 
     pairs_of_rays = []
 
-    hbondset = hbond_ray_pairs.identify_bonded_pairs(p, hbond_ray_pairs.find_hbonds(p))
+    if ((accA != donA) and (accB != donB)):
+        return pairs_of_rays
     
-    for hbond in hbondset.hbonds():
-        don_res = p.residue(hbond.don_res())
-        acc_res = p.residue(hbond.acc_res())
-                
-        don_list = list(don_res.Hpos_polar_sc()) + list(don_res.accpt_pos_sc())
-        acc_list = list(acc_res.Hpos_polar_sc()) + list(acc_res.accpt_pos_sc())
-        
-        for (j, k) in itertools.product(don_list, acc_list):
-            if (j == hbond.don_hatm() or k == hbond.acc_atm()):
-                continue
-            
-            print(*((y, x.atom_name(x.atom_base(y))) for (x, y) in zip([don_res, acc_res], [j, k])))
+    targets = selector.apply(p)
+    
+    for rsdA, rsdB in itertools.permutations(p.residues, 2):
+        posA = rsdA.accpt_pos_sc() if accA else rsdA.Hpos_polar_sc()
+        posB = rsdB.accpt_pos_sc() if accB else rsdB.Hpos_polar_sc()
 
-            first = hbond_ray_pairs.create_ray(don_res.xyz(j), don_res.xyz(don_res.atom_base(j)))
-            second = hbond_ray_pairs.create_ray(acc_res.xyz(k), acc_res.xyz(acc_res.atom_base(k)))
-            
-            pairs_of_rays += [(first, second)]
-            pairs_of_rays += [(second, first)]
+        for (j, k) in itertools.product(posA, posB):
+            first = hbond_ray_pairs.create_ray(rsdA.xyz(j), rsdA.xyz(rsdA.atom_base(j)))
+            second = hbond_ray_pairs.create_ray(rsdB.xyz(k), rsdB.xyz(rsdB.atom_base(k)))
+
+            # NOTE(onalant): We want to compare the ``origin'' coordinates of the rays
+            rmsd = np.sqrt(sum(map(lambda x, y: (x - y) ** 2, zip(first[:,0], second[:,0]))))
+
+            if (rmsd <= 16.0): # NOTE(onalant): 16.0 is the Cartesian bound
+                pairs_of_rays += [(first, second)]
+                pairs_of_rays += [(second, first)]
 
     return pairs_of_rays
 
