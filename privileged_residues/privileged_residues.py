@@ -32,7 +32,7 @@ def _init_pyrosetta():
     from . import process_networks as pn
     params_files_list = [path.join(_dir, t.resName) + '.params' for _, t in
                          pn.fxnl_groups.items()]
-    opts = ['-corrections::beta_nov16', '-ignore_waters false', '-mute core',
+    opts = ['-corrections:beta_nov16', '-ignore_waters false', '-mute core',
             '-extra_res_fa {}'.format(' '.join(params_files_list)),
             '-constant_seed', '-output_virtual']
     pyrosetta.init(extra_options=' '.join(opts),
@@ -246,7 +246,7 @@ def laod_hash_tables_from_disk(fname=None):
     # convert pose to ATOM records append all together and write them to a file
 
 
-def find_privileged_interactions_in_pose(p):
+def find_privileged_interactions_in_pose(p, ht_name='Sc_Bb_0.1_2.0_16.0.pkl'):
     """
     """
     from os import path
@@ -254,7 +254,7 @@ def find_privileged_interactions_in_pose(p):
     from . import bidentify as bd
     from . import position_residue as pr
 
-    ht_name = 'Sc_Bb_0.1_2.0_16.0.pkl'
+    # ht_name = 'Sc_Bb_0.1_2.0_16.0.pkl'
 
     # this is a little hacky, but it makes my life easier for now:
     # ep -> extra path

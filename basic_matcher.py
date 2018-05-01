@@ -6,6 +6,7 @@ import argparse
 import os
 import pickle
 import privileged_residues
+import sys
 
 from os import makedirs, path
 from privileged_residues.privileged_residues import _init_pyrosetta as init
@@ -32,16 +33,11 @@ def make_parser():
 
     return parser
 
-if __name__ == "__main__":
+def main(argv):
     parser = make_parser()
-
     args = parser.parse_args()
 
-    params_files_list = [path.join("/home/onalant/source/privileged_residues/privileged_residues/data/functional_groups", t.resName) + '.params' for _, t in process_networks.fxnl_groups.items()] + args.params
-
-    opts = ['-corrections::beta_nov16', '-ignore_waters false', '-mute core', '-extra_res_fa {}'.format(' '.join(params_files_list)), '-constant_seed', '-output_virtual']
-
-    pyrosetta.init(extra_options=' '.join(opts))
+    init()
 
     params = (args.cart_resl, args.ori_resl, args.cart_bound)
     ht_name = 'Sc_Sc_%.1f_%.1f_%.1f.pkl' % params
@@ -68,3 +64,7 @@ if __name__ == "__main__":
 
         for i, hit in enumerate(hits):
             hit.dump_pdb(path.join(out, "result_%04d.pdb" % (i + 1)))
+
+
+if __name__ == "__main__":
+    main(sys.argv)    
