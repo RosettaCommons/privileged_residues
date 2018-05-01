@@ -79,4 +79,4 @@ Session.vim
 tags
 
 local/
-
+.nfs* # NFS temporary files
