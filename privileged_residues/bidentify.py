@@ -171,7 +171,7 @@ def look_up_connected_network(p, selector = pyrosetta.rosetta.core.select.residu
 
     pairs_of_rays = []
 
-    if ((accA != donA) and (accB != donB)):
+    if ((accA == donA) or (accB == donB)):
         return pairs_of_rays
     
     targets = selector.apply(p)
@@ -185,7 +185,7 @@ def look_up_connected_network(p, selector = pyrosetta.rosetta.core.select.residu
             second = hbond_ray_pairs.create_ray(rsdB.xyz(k), rsdB.xyz(rsdB.atom_base(k)))
 
             # NOTE(onalant): We want to compare the ``origin'' coordinates of the rays
-            rmsd = np.sqrt(sum(map(lambda x, y: (x - y) ** 2, zip(first[:,0], second[:,0]))))
+            rmsd = np.sqrt(sum(map(lambda x: (x[0] - x[1]) ** 2, zip(first[:,0], second[:,0]))))
 
             if (rmsd <= 16.0): # NOTE(onalant): 16.0 is the Cartesian bound
                 pairs_of_rays += [(first, second)]

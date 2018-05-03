@@ -141,3 +141,4 @@ def filter_clashes_and_minimize(p, hits, clash_cutoff=35.0, sfx=None, mmap=None)
 
 if __name__ == '__main__':
     print('Don\'t execute me, bruh.')
+
