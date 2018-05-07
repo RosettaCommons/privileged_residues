@@ -26,7 +26,7 @@ functional_groups = sorted([
     ("A__", FunctionalGroup("amine", True, False, ["NZ", "1HZ", "2HZ"])),
     ("C__", FunctionalGroup("carboxylate", False, True, ["CD", "OE1", "OE2"])),
     ("CA_", FunctionalGroup("carboxamide", True, True, ["CG", "OD1", "ND2"]))
-]), key=lambda x, x[0])
+], key=lambda x: x[0])
 
 ResInfo = namedtuple('ResName', ['grp', 'atoms'])
 rsd_to_fxnl_grp = {

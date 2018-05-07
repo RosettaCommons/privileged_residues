@@ -20,7 +20,7 @@ def rays_to_transform(first: np.array, second: np.array) -> np.array:
     z_hat = np.zeros(len(x_hat))
     z_hat[:-1] = np.cross(x_hat[:-1], y_hat[-1])
 
-    matrix = [x_hat, y_hat, z_hat, trans]
+    matrix = [x_hat, y_hat, z_hat, translation]
 
     assert_allclose(map(np.linalg.norm, matrix[:-1]), 1.0)
 

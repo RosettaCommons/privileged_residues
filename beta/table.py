@@ -1,28 +1,9 @@
-import numpy as np
-import rif
-import pyrosetta
-
-from collections import namedtuple
-
-from pyrosetta.rosetta.core.chemical import ChemicalManager
-from pyrosetta.rosetta.core.conformation import ResidueFactory
-
-from rif.geom import rif.geom.Ray
-from rif.geom.ray_hash import RayToRay4dHash
-from rif.hash import XformHash_bt24_BCC6_X3f
+import h5py
+import pandas
 
 from typing import Iterable, MappingView
 
-import .geometry
-
-from .chemical import functional_groups
-
 # NOTE(onalant): <C-g> will show current file in nvi!
-
-_TOPOLOGY = "fa_standard"
-
-_LEVER = 10
-_BOUND = 1000
 
 class ResidueTable(Mapping[np.uint64, Iterable[pyrosetta.Pose]]):
 
@@ -47,7 +28,7 @@ class ResidueTable(Mapping[np.uint64, Iterable[pyrosetta.Pose]]):
 
             self.__dummypose.replace_residue(1, res, False)
             
-            coords = np.stack([np.array(list(self.__dummypose.residues[1].xyz(atom) for atom in fgroup.atoms)])
+            coords = np.stack([np.array(list(self.__dummypose.residue(1).xyz(atom))) for atom in fgroup.atoms])
             stub = geometry.coords_to_transform(coords)
 
             transform = np.dot(position, np.linalg.inv(stub))
