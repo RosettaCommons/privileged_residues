@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import pandas
 
-from typing import Tuple, Iterable, Callable, Mapping, Any
+from typing import Callable, Iterable, Mapping, Tuple, Union
 
 # NOTE(onalant): <C-g> will show current file in nvi!
 
@@ -17,15 +17,15 @@ class ResidueTable(Mapping[np.uint64, np.ndarray]):
 
         self._visit_datasets(do_visit)
         
-    def __getitem__(self, key: Any) -> np.ndarray:
+    def __getitem__(self, key: Union[np.uint64, Tuple[np.uint64, str]]) -> np.ndarray:
         if (isinstance(key, int)):
-            return self.getitem(key)
-        elif (isinstance(key, tuple))
-            return self.getitem(*key)
+            return self.fetch(key)
+        elif (isinstance(key, tuple)):
+            return self.fetch(*key)
         else:
-            return [ ]
+            raise KeyError("Must search for hash---dataset pair!")
 
-    def getitem(self, key: np.uint64, findgroup: str = "") -> np.ndarray:
+    def fetch(self, key: np.uint64, findgroup: str = "") -> np.ndarray:
         data = [ ]
 
         def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset) -> None:

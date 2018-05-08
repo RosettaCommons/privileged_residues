@@ -17,16 +17,16 @@ Attributes:
         functional group in space.
 """
 
-functional_groups = sorted([
-    ("OH_", FunctionalGroup("hydroxide", True, True, ["CV", "OH", "HH"])),
-    ("G__", FunctionalGroup("guanidinium", True, False, ["CZ", "NH1", "NH2"])),
-    ("I__", FunctionalGroup("imidazole", True, True, ["ND1", "CD2", "NE2"])),
+functional_groups = {
+    "OH_": FunctionalGroup("hydroxide", True, True, ["CV", "OH", "HH"]),
+    "G__": FunctionalGroup("guanidinium", True, False, ["CZ", "NH1", "NH2"]),
+    "I__": FunctionalGroup("imidazole", True, True, ["ND1", "CD2", "NE2"]),
     # imidazole tautomer
-    ("ID_", FunctionalGroup("imidazole_D", True, True, ["ND1", "CD2", "NE2"])),
-    ("A__", FunctionalGroup("amine", True, False, ["NZ", "1HZ", "2HZ"])),
-    ("C__", FunctionalGroup("carboxylate", False, True, ["CD", "OE1", "OE2"])),
-    ("CA_", FunctionalGroup("carboxamide", True, True, ["CG", "OD1", "ND2"]))
-], key=lambda x: x[0])
+    "ID_": FunctionalGroup("imidazole_D", True, True, ["ND1", "CD2", "NE2"]),
+    "A__": FunctionalGroup("amine", True, False, ["NZ", "1HZ", "2HZ"]),
+    "C__": FunctionalGroup("carboxylate", False, True, ["CD", "OE1", "OE2"]),
+    "CA_": FunctionalGroup("carboxamide", True, True, ["CG", "OD1", "ND2"])
+}
 
 ResInfo = namedtuple('ResName', ['grp', 'atoms'])
 rsd_to_fxnl_grp = {
