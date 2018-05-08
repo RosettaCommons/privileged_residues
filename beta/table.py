@@ -1,43 +1,78 @@
 import h5py
+import numpy as np
 import pandas
 
-from typing import Iterable, MappingView
+from typing import Tuple, Iterable, Callable, Mapping, Any
 
 # NOTE(onalant): <C-g> will show current file in nvi!
 
-class ResidueTable(Mapping[np.uint64, Iterable[pyrosetta.Pose]]):
+class ResidueTable(Mapping[np.uint64, np.ndarray]):
 
-    def __init__(self, cart_resl: float = 0.1, ori_resl: float = 2.0, cart_bound: float = 16.0) -> None:
-        self._raygrid = RayToRay4dHash(ori_resl, _LEVER, bound=_BOUND)
-        self._lattice = XformHash_bt24_BCC6_X3f(cart_resl, ori_resl, cart_bound)
-        self._table = None
+    def __init__(self, dbpath: str) -> None:
+        self._table = h5py.File(dbpath, "r")
+        self._indices = { }
+
+        def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset):
+            self._indices[name] = None
+
+        self._visit_datasets(do_visit)
         
-        self.__restypeset = ChemicalManager.get_instance().residue_type_set(_TOPOLOGY)
-        self.__dummypose = pyrosetta.pose_from_sequence("A", _TOPOLOGY)
+    def __getitem__(self, key: Any) -> np.ndarray:
+        if (isinstance(key, int)):
+            return self.getitem(key)
+        elif (isinstance(key, tuple))
+            return self.getitem(*key)
+        else:
+            return [ ]
 
-    def __get_item__(self, key: np.uint64) -> Iterable[pyrosetta.Pose]:
-        placements = self._table[key]
+    def getitem(self, key: np.uint64, findgroup: str = "") -> np.ndarray:
+        data = [ ]
 
-        for placement in placements:
-            position = self._lattice.get_center([placement[1]])['raw'].squeeze()
-            fgrp_info = functional_groups[placement[0]]
-            resname = fgrp_info[0]
-            fgroup = fgrp_info[1]
+        def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset) -> None:
+            if ((not findgroup or findgroup in name) and name in self._indices):
+                if (self._indices[name] is None):
+                    self._indices[name] = pandas.Index(dataset[dataset.dtype.names[0]])
 
-            res = ResidueFactory.create_residue(self.__restypeset.name_map(resname))
+                index = self._indices[name]
+                
+                if (key in index):
+                    results = index.get_loc(key)
+                    data.append(dataset[results.start:results.stop:results.step])
 
-            self.__dummypose.replace_residue(1, res, False)
-            
-            coords = np.stack([np.array(list(self.__dummypose.residue(1).xyz(atom))) for atom in fgroup.atoms])
-            stub = geometry.coords_to_transform(coords)
+        self._visit_datasets(do_visit)
 
-            transform = np.dot(position, np.linalg.inv(stub))
-            self.__dummypose.apply_transform(transform)
-            yield self.__dummypose.clone()
+        return np.concatenate(data) if len(data) else data
 
-    def __iter__(self):
-        return iter(self._table)
+    def __iter__(self) -> Iterable[np.ndarray]:
+        datasets = [ ]
 
-    def __len__(self):
-        return len(self.table)
+        def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset):
+            nonlocal datasets
+            datasets.append(dataset)
+
+        self._visit_datasets(do_visit)
+        
+        for dataset in datasets:
+            yield from dataset
+
+    def __len__(self) -> int:
+        totlen = 0
+
+        def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset):
+            nonlocal totlen
+            totlen += len(dataset)
+
+        self._visit_datasets(do_visit)
+
+        return totlen
+
+
+    def _visit_datasets(self, callback: Callable[[Tuple[str, ...], h5py.Dataset], None]) -> None:
+        def do_visit(name: str, item: h5py.HLObject) -> None:
+            if (isinstance(item, h5py.Dataset)):
+                key = tuple(filter(len, name.split("/")))
+
+                callback(key, item)
+
+        self._table.visititems(do_visit)
 
