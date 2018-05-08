@@ -28,6 +28,7 @@ class ResidueTable(Mapping[np.uint64, np.ndarray]):
     def fetch(self, key: np.uint64, findgroup: str = "") -> np.ndarray:
         data = [ ]
 
+		# NOTE(onalant): top-level searching, just add ``name'' keys be attributes to query for searching
         def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset) -> None:
             if ((not findgroup or findgroup in name) and name in self._indices):
                 if (self._indices[name] is None):
