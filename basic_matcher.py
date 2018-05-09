@@ -6,7 +6,7 @@ import privileged_residues
 import sys
 
 from os import makedirs, path
-from multiprocessing import Manager, Pool, freeze_support, cpu_count
+from multiprocessing import Pool, freeze_support, cpu_count
 
 from privileged_residues.privileged_residues import _init_pyrosetta as init
 from privileged_residues import bidentify
@@ -72,8 +72,8 @@ def make_parser():
     return parser
 
 
-def get_hits_for_interaction_type(ht_name_full, pdb_file, residues,
-                                  return_container, idx):
+def get_hits_for_interaction_type(ht_name_full, pdb_file, residues=None,
+                                  outpath=None):
 
     p = pyrosetta.pose_from_pdb(path.expanduser(pdb_file))
     selector = TrueResidueSelector()
@@ -87,10 +87,22 @@ def get_hits_for_interaction_type(ht_name_full, pdb_file, residues,
         print('Loading table for {} interactions...'.format(ht_info.type))
         ht = pickle.load(f)
 
-    pairs_of_rays = _look_for_interactions[ht_info.type](pose, selector)
-    return_container[idx] = list(bidentify.look_up_interactions(pairs_of_rays,
+    pairs_of_rays = _look_for_interactions[ht_info.type](p, selector)
+    
+    if outpath:
+        out = path.expanduser(outpath)
+        makedirs(out, exist_ok=True)
+        p.dump_pdb(path.join(out, "ori.pdb"))
+
+    n = 0
+    for hit in bidentify.look_up_interactions(pairs_of_rays,
                                  ht, ht_info.cart_resl, ht_info.ori_resl,
-                                 ht_info.cart_bound))
+                                 ht_info.cart_bound):
+        n += 1
+            
+        hit.dump_pdb(path.join(out, '{}_result_{:04d}.pdb'.format(
+            ht_info.type, n)))
+    print('There are {} hits for {} interactions.'.format(n, ht_info.type))
 
 
 def get_hits_from_tables(hash_tables, p, selector):
@@ -162,15 +174,14 @@ def main(argv):
             selector.append_index(idx)
     '''
 
-    manager = Manager()
-    hits = manager.list([None for _ in range(len(hash_tables))])
-    arguments = [(ht, args.PDBFile, args.residues, hits, idx) for idx, ht in
-                 enumerate(hash_tables)]
+    arguments = [(ht, args.PDBFile, args.residues, args.outpath) for ht in
+                 hash_tables]
     with Pool(processes=cpu_count()) as pool:
         pool.starmap(get_hits_for_interaction_type, arguments)
         pool.close()
         pool.join()
 
+    '''
     if args.outpath:
         out = path.expanduser(args.outpath)
         makedirs(out, exist_ok=True)
@@ -184,7 +195,7 @@ def main(argv):
             for i, hit in enumerate(it_hits):
                 hit.dump_pdb(path.join(out, '{}_result_{:04d}.pdb'.format(
                     ht_info.type, i + 1)))
-
+    '''
 
 if __name__ == "__main__":
     freeze_support()
