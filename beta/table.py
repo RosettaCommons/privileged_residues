@@ -2,20 +2,21 @@ import h5py
 import numpy as np
 import pandas
 
+from lru import LRU
 from typing import Callable, Iterable, Mapping, Tuple, Union
 
 # NOTE(onalant): <C-g> will show current file in nvi!
 
-class ResidueTable(Mapping[np.uint64, np.ndarray]):
+class GenericTable(Mapping[np.uint64, np.ndarray]):
 
-    def __init__(self, dbpath: str) -> None:
+    def __init__(self, dbpath: str, lru = 0) -> None:
+        assert(lru >= 0)
         self._table = h5py.File(dbpath, "r")
-        self._indices = { }
-
-        def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset):
-            self._indices[name] = None
-
-        self._visit_datasets(do_visit)
+    
+        if (lru == 0):
+            self._indices = { }
+        else:
+            self._indices = LRU(lru)
         
     def __getitem__(self, key: Union[np.uint64, Tuple[np.uint64, str]]) -> np.ndarray:
         if (isinstance(key, int)):
@@ -28,21 +29,21 @@ class ResidueTable(Mapping[np.uint64, np.ndarray]):
     def fetch(self, key: np.uint64, findgroup: str = "") -> np.ndarray:
         data = [ ]
 
-		# NOTE(onalant): top-level searching, just add ``name'' keys be attributes to query for searching
+        # NOTE(onalant): top-level searching, just add ``name'' keys be attributes to query for searching
         def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset) -> None:
-            if ((not findgroup or findgroup in name) and name in self._indices):
-                if (self._indices[name] is None):
+            if (findgroup not in name):
+                if (name not in self._indices):
                     self._indices[name] = pandas.Index(dataset[dataset.dtype.names[0]])
 
                 index = self._indices[name]
                 
                 if (key in index):
                     results = index.get_loc(key)
-                    data.append(dataset[results.start:results.stop:results.step])
+                    data.append(dataset[results])
 
         self._visit_datasets(do_visit)
 
-        return np.concatenate(data) if len(data) else data
+        return np.concatenate(data) if len(data) else np.array(data)
 
     def __iter__(self) -> Iterable[np.ndarray]:
         datasets = [ ]
