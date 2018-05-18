@@ -29,7 +29,7 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
     residue_type_set = pyrosetta.rosetta.core.chemical.ChemicalManager.get_instance().residue_type_set("fa_standard")
     dummy_pose = pyrosetta.pose_from_sequence("A", "fa_standard")
     
-    for r1, r2 in pairs_of_rays:
+    for interaction_number, (r1, r2) in enumerate(pairs_of_rays):
         hashed_rays = int(hbond_ray_pairs.hash_rays(r1, r2))
         try:
             positioning_info = ht[hashed_rays]
@@ -62,7 +62,7 @@ def look_up_interactions(pairs_of_rays, ht, cart_resl, ori_resl, cart_bound):
             pos_frame = hbond_ray_pairs.get_frame_for_coords(c)
             xf = np.dot(np.dot(ray_frame, xform), np.linalg.inv(pos_frame))
             pr.transform_pose(dummy_pose, xf)
-            yield dummy_pose.clone()
+            yield interaction_number, dummy_pose.clone()
 
 
 def look_for_sc_bb_bidentates(p, selector = pyrosetta.rosetta.core.select.residue_selector.TrueResidueSelector()):

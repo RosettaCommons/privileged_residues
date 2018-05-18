@@ -95,13 +95,19 @@ def get_hits_for_interaction_type(ht_name_full, pdb_file, residues=None,
         p.dump_pdb(path.join(out, "ori.pdb"))
 
     n = 0
-    for hit in bidentify.look_up_interactions(pairs_of_rays,
+    i_n = 0
+    old_in = 0
+    for interaction_number, hit in bidentify.look_up_interactions(pairs_of_rays,
                                  ht, ht_info.cart_resl, ht_info.ori_resl,
                                  ht_info.cart_bound):
+        if interaction_number != old_in:
+            old_in = interaction_number
+            i_n += 1
+            n = 0
         n += 1
             
-        hit.dump_pdb(path.join(out, '{}_result_{:04d}.pdb'.format(
-            ht_info.type, n)))
+        hit.dump_pdb(path.join(out, '{}_{}_result_{:04d}.pdb'.format(
+            i_n, ht_info.type, n)))
     print('There are {} hits for {} interactions.'.format(n, ht_info.type))
 
 
@@ -109,7 +115,7 @@ def get_hits_from_tables(hash_tables, p, selector):
     hits = []
     for interaction_type in bidentate_interaction_types:
         ht_name_full = path.join(ht_path, interaction_type + suffix)
-        hits += get_hits_for_interaction_type(ht_name_full, p, selector)
+        hits.append(get_hits_for_interaction_type(ht_name_full, p, selector))
     return hits
 
 
