@@ -9,7 +9,7 @@ from typing import Callable, Iterable, Mapping, Tuple, Union
 
 class GenericTable(Mapping[np.uint64, np.ndarray]):
 
-    def __init__(self, dbpath: str, lru = 0) -> None:
+    def __init__(self, dbpath: str, lru: int = 0) -> None:
         assert(lru >= 0)
         self._table = h5py.File(dbpath, "r")
     
@@ -24,7 +24,7 @@ class GenericTable(Mapping[np.uint64, np.ndarray]):
         elif (isinstance(key, tuple)):
             return self.fetch(*key)
         else:
-            raise KeyError("Must search for hash---dataset pair!")
+            raise KeyError("Must search for hash---group pair!")
 
     def fetch(self, key: np.uint64, findgroup: str = "") -> np.ndarray:
         data = [ ]
