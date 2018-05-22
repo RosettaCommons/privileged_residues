@@ -31,7 +31,7 @@ class GenericTable(Mapping[np.uint64, np.ndarray]):
 
         # NOTE(onalant): top-level searching, just add ``name'' keys be attributes to query for searching
         def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset) -> None:
-            if (findgroup not in name):
+            if (not findgroup or findgroup in name):
                 if (name not in self._indices):
                     self._indices[name] = pandas.Index(dataset[dataset.dtype.names[0]])
 

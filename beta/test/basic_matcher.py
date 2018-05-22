@@ -40,7 +40,7 @@ if __name__ == "__main__":
     p = pyrosetta.pose_from_pdb(path.expanduser(args.PDBFile))
 
     pairs_of_rays = bidentify.look_for_sc_sc_bidentates(p)
-    first, second = pairs_of_rays[1]
+    first, second = pairs_of_rays[0]
 
     hits = list(presidues.match(first, second, groups=["sc_sc"]))
     print(len(hits))
