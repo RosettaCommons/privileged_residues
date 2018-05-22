@@ -46,7 +46,7 @@ class PrivilegedResidues:
 
 			for pos_info in results:
 				try:
-					stored_frame = self._lattice.get_center([pos_info["transform"]])['raw'].squeeze()
+					stored_frame = self._lattice.get_center([pos_info["transform"]])["raw"].squeeze()
 				except:
 					continue
 

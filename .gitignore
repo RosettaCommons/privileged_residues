@@ -78,5 +78,9 @@ Session.vim
 *~
 tags
 
+# Miscellanea
 local/
-.nfs* # NFS temporary files
+
+# NFS temporary files
+.nfs*
+
