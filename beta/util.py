@@ -1,4 +1,9 @@
+import numpy as np
 import pyrosetta
+import typing
+
+from pyrosetta.bindings.utility import bind_method
+from pyrosetta.rosetta.numeric import xyzVector_double_t as V3
 
 @bind_method(pyrosetta.Pose)
 def apply_transform(self, xform: np.array) -> None:
@@ -6,7 +11,7 @@ def apply_transform(self, xform: np.array) -> None:
 
     for res in self.residues:
         for atom in res.atoms():
-            c = np.array([list(atom.xyz()) + [1.0]], dtype=np.float)
+            c = np.array(list(atom.xyz()) + [1.0], dtype=np.float)
             coords.append(c)
 
     index = 0

@@ -5,11 +5,15 @@ import os
 import pickle
 import privileged_residues
 
+# WARN(onalant): hack to make beta files available for import
+import sys
+sys.path.append("../")
+
 from os import makedirs, path
 from privileged_residues.privileged_residues import _init_pyrosetta as init
 from privileged_residues import bidentify
 from privileged_residues import position_residue
-from privileged_residues.beta.process import PrivilegedResidues
+from process import PrivilegedResidues
 
 def make_parser():
     parser = argparse.ArgumentParser()
@@ -35,13 +39,10 @@ if __name__ == "__main__":
 
     p = pyrosetta.pose_from_pdb(path.expanduser(args.PDBFile))
 
-    with open(ht_name_full, 'rb') as f:
-        ht = pickle.load(f)
-
     pairs_of_rays = bidentify.look_for_sc_sc_bidentates(p)
-    first, second = next(pairs_of_rays)
+    first, second = pairs_of_rays[1]
 
-    hits = presidues.match(*pairs_of_rays[0], groups=["sc_sc"])
+    hits = list(presidues.match(first, second, groups=["sc_sc"]))
     print(len(hits))
 
     if args.outpath:

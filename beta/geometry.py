@@ -2,10 +2,7 @@ import numpy as np
 import pyrosetta
 import typing
 
-from np.testing import assert_allclose
-
-from pyrosetta.bindings.utility import bind_method
-from pyrosetta.rosetta.numeric import xyzVector_double_t as V3
+from numpy.testing import assert_allclose
 
 def rays_to_transform(first: np.array, second: np.array) -> np.array:
     translation = first[:, 0]
@@ -18,11 +15,12 @@ def rays_to_transform(first: np.array, second: np.array) -> np.array:
     y_hat = y / np.linalg.norm(y)
 
     z_hat = np.zeros(len(x_hat))
-    z_hat[:-1] = np.cross(x_hat[:-1], y_hat[-1])
+    z_hat[:-1] = np.cross(x_hat[:-1], y_hat[:-1])
+    assert_allclose(np.linalg.norm(z_hat), 1.0)
 
     matrix = [x_hat, y_hat, z_hat, translation]
 
-    assert_allclose(map(np.linalg.norm, matrix[:-1]), 1.0)
+    assert_allclose(list(map(np.linalg.norm, matrix[:-1])), 1.0)
 
     return np.column_stack(matrix)
 
@@ -42,27 +40,10 @@ def coords_to_transform(coords: np.array) -> np.array:
     y_hat = y / np.linalg.norm(y)
     matrix[:3, 1] = y_hat
 
-    x_hat = np.cross(y_hat, z_hat)
+    x_hat = np.cross(y_hat[:-1], z_hat[:-1])
     matrix[:3, 0] = x_hat
 
-    assert_allclose(map(np.linalg.norm, [x_hat, y_hat, z_hat]), 1.0)
+    assert_allclose(list(map(np.linalg.norm, [x_hat, y_hat, z_hat])), 1.0)
     
     return matrix
-
-@bind_method(pyrosetta.Pose)
-def apply_transform(self, xform: np.array) -> None:
-    coords = []
-
-    for res in self.residues:
-        for atom in res.atoms():
-            c = np.array([list(atom.xyz()) + [1.0]], dtype=np.float)
-            coords.append(c)
-    
-    index = 0
-    transformed_coords = np.dot(xform, np.stack(coords).T)
-
-    for res in self.residues:
-        for atom in res.atoms():
-            atom.xyz(V3(*transformed_coords[:3, index]))
-            index += 1
 

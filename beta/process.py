@@ -1,3 +1,4 @@
+import numpy as np
 import pyrosetta
 import table
 
@@ -5,6 +6,7 @@ import chemical
 import geometry
 import util
 
+from rif.geom import Ray
 from rif.geom.ray_hash import RayToRay4dHash
 from rif.hash import XformHash_bt24_BCC6_X3f
 
@@ -29,25 +31,29 @@ class PrivilegedResidues:
 
 	# bidentate: "sc_sc", "sc_scbb", "sc_bb"
 	# network: "acceptor_acceptor", "acceptor_donor", "donor_acceptor", "donor_donor"
-	def match(ray1, ray2, groups=["bidentate"]):
+	def match(self, ray1, ray2, groups=["bidentate"]):
 		dummy_pose = pyrosetta.pose_from_sequence("A", "fa_standard")
 		res_type_set = dummy_pose.conformation().residue_type_set_for_conf()
 
 		def _numpy_to_rif_ray(r):
-			return r.astype('f4').reshape(r.shape[:-2] + (8,)).view(rif.geom.Ray)
+			return r.astype('f4').reshape(r.shape[:-2] + (8,)).view(Ray)
 
-		hashed_rays = int(self._raygrid.get_keys(*(_numpy_to_rif_ray(r) for r in [r1, r2])).squeeze())
+		hashed_rays = np.asscalar(self._raygrid.get_keys(*(_numpy_to_rif_ray(r) for r in [ray1, ray2])).squeeze())
 
 		for group in groups:
 			results = self._data[hashed_rays, group]
 			ray_frame = geometry.rays_to_transform(ray1, ray2)
 
 			for pos_info in results:
-				stored_frame = self._lattice.get_center([pos_info[2]])["raw"].squeeze()
-				resname = pos_info[1].decode("utf-8")
+				try:
+					stored_frame = self._lattice.get_center([pos_info["transform"]])['raw'].squeeze()
+				except:
+					continue
+
+				resname = pos_info["residue"].decode("utf-8")
 				pos_grp = chemical.functional_groups[resname]
 
-				dummy_pose.replace_residue(1, ResidueFactory.create_residue(res_type_set.name_map(resname), False)
+				dummy_pose.replace_residue(1, ResidueFactory.create_residue(res_type_set.name_map(resname)), False)
 
 				coords = [np.array([*dummy_pose.residues[1].xyz(atom)]) for atom in pos_grp.atoms]
 				c = np.stack(coords)
