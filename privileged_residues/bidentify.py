@@ -87,16 +87,27 @@ def look_for_sc_bb_bidentates(p, selector = pyrosetta.rosetta.core.select.residu
         O = rsd.atom_index("O")
         C = rsd.atom_base(O)
 
+        if not (rsd.atom_name(H).strip() == 'H' and
+                rsd.atom_name(N).strip() == 'N' and
+                rsd.atom_name(O).strip() == 'O' and
+                rsd.atom_name(C).strip() == 'C'):
+            print('Unable to find expected atoms for BB bidentate hydrogen '
+                   'bonds for a {} residue'.format(rsd.name3()))
+            continue
+
         n_ray = hbond_ray_pairs.create_ray(rsd.xyz(H), rsd.xyz(N))
         c_ray = hbond_ray_pairs.create_ray(rsd.xyz(O), rsd.xyz(C))
 
-        pairs_of_rays += [(n_ray, c_ray), (c_ray, n_ray)]
-
+        # pairs_of_rays += [(n_ray, c_ray), (c_ray, n_ray)]
+        pairs_of_rays += [(n_ray, c_ray)] #, (c_ray, n_ray)]
         if i != 1:
             prev_rsd = p.residues[i - 1]
 
             O = prev_rsd.atom_index("O")
             C = prev_rsd.first_adjacent_heavy_atom(O)
+
+            if not (prev_rsd.atom_name(O).strip() == 'O' and prev_rsd.atom_name(C).strip() == 'C'):
+                continue
 
             prev_c = hbond_ray_pairs.create_ray(prev_rsd.xyz(O), 
                                                 prev_rsd.xyz(C))
@@ -106,10 +117,15 @@ def look_for_sc_bb_bidentates(p, selector = pyrosetta.rosetta.core.select.residu
             next_rsd = p.residues[i + 1]
             H = next_rsd.attached_H_begin(rsd.atom_index("N"))
             N = next_rsd.first_adjacent_heavy_atom(H)
+
+            if not (next_rsd.atom_name(H).strip() == 'H' and next_rsd.atom_name(N).strip() == 'N'):
+                continue
+
             next_n = hbond_ray_pairs.create_ray(next_rsd.xyz(H), 
                                                 next_rsd.xyz(N))
             pairs_of_rays += [(next_n, c_ray), (c_ray, next_n)]
     return pairs_of_rays
+
 
 def look_for_sc_scbb_bidentates(p, selector = pyrosetta.rosetta.core.select.residue_selector.TrueResidueSelector()):
     """
@@ -138,8 +154,8 @@ def look_for_sc_scbb_bidentates(p, selector = pyrosetta.rosetta.core.select.resi
         for i in rsd.accpt_pos_sc():
             ray = hbond_ray_pairs.create_ray(rsd.xyz(i), rsd.xyz(rsd.atom_base(i)))
             
-            pairs_of_rays += [(n_ray, ray), (ray, n_ray)]
-            pairs_of_rays += [(c_ray, ray), (ray, c_ray)]
+            pairs_of_rays += [(n_ray, ray)] #, (ray, n_ray)]
+            pairs_of_rays += [(c_ray, ray)] #, (ray, c_ray)]
 
     return pairs_of_rays
 
