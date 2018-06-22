@@ -2,23 +2,17 @@ import h5py
 import numpy as np
 import pandas
 
-from lru import LRU
-from typing import Callable, Iterable, Mapping, Tuple, Union
-
 # NOTE(onalant): <C-g> will show current file in nvi!
 
-class GenericTable(Mapping[np.uint64, np.ndarray]):
+class GenericTable:
 
-    def __init__(self, dbpath: str, lru: int = 0) -> None:
+    def __init__(self, dbpath):
         assert(lru >= 0)
         self._table = h5py.File(dbpath, "r")
     
-        if (lru == 0):
-            self._indices = { }
-        else:
-            self._indices = LRU(lru)
+        self._indices = { }
         
-    def __getitem__(self, key: Union[np.uint64, Tuple[np.uint64, str]]) -> np.ndarray:
+    def __getitem__(self, key):
         if (isinstance(key, int)):
             return self.fetch(key)
         elif (isinstance(key, tuple)):
@@ -26,11 +20,11 @@ class GenericTable(Mapping[np.uint64, np.ndarray]):
         else:
             raise KeyError("Must search for hash---group pair!")
 
-    def fetch(self, key: np.uint64, findgroup: str = "") -> np.ndarray:
+    def fetch(self, key, findgroup = ""):
         data = [ ]
 
         # NOTE(onalant): top-level searching, just add ``name'' keys be attributes to query for searching
-        def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset) -> None:
+        def do_visit(name, dataset):
             if (not findgroup or findgroup in name):
                 if (name not in self._indices):
                     self._indices[name] = pandas.Index(dataset[dataset.dtype.names[0]])
@@ -45,10 +39,10 @@ class GenericTable(Mapping[np.uint64, np.ndarray]):
 
         return np.concatenate(data) if len(data) else np.array(data)
 
-    def __iter__(self) -> Iterable[np.ndarray]:
+    def __iter__(self):
         datasets = [ ]
 
-        def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset):
+        def do_visit(name, dataset):
             nonlocal datasets
             datasets.append(dataset)
 
@@ -57,10 +51,10 @@ class GenericTable(Mapping[np.uint64, np.ndarray]):
         for dataset in datasets:
             yield from dataset
 
-    def __len__(self) -> int:
+    def __len__(self):
         totlen = 0
 
-        def do_visit(name: Tuple[str, ...], dataset: h5py.Dataset):
+        def do_visit(name, dataset):
             nonlocal totlen
             totlen += len(dataset)
 
@@ -69,8 +63,8 @@ class GenericTable(Mapping[np.uint64, np.ndarray]):
         return totlen
 
 
-    def _visit_datasets(self, callback: Callable[[Tuple[str, ...], h5py.Dataset], None]) -> None:
-        def do_visit(name: str, item: h5py.HLObject) -> None:
+    def _visit_datasets(self, callback):
+        def do_visit(name, item):
             if (isinstance(item, h5py.Dataset)):
                 key = tuple(filter(len, name.split("/")))
 

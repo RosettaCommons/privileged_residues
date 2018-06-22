@@ -41,8 +41,8 @@ def _init_pyrosetta():
 
 class PrivilegedResidues:
 
-    def __init__(self, path = "/home/onalant/dump/2018-05-07_datatables/database.h5", lru = 0):
-        self._data = table.GenericTable(path, lru)
+    def __init__(self, path = "/home/onalant/dump/2018-05-07_datatables/database.h5"):
+        self._data = table.GenericTable(path)
 
         cart_resl = self._data._table.attrs["cart_resl"]
         ori_resl = self._data._table.attrs["ori_resl"]
@@ -89,6 +89,7 @@ class PrivilegedResidues:
 
     def search(self, pose, groups=["bidentate"], selector = TrueResidueSelector()):
         pairs_of_rays = []
+
         if np.any([x in groups for x in ["sc_sc", "bidentate"]]):
             pairs_of_rays += look_for_sc_sc_bidentates(p, selector)
         if np.any([x in groups for x in ["sc_scbb", "bidentate"]]):
