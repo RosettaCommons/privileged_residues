@@ -11,7 +11,6 @@ from rif.geom.ray_hash import RayToRay4dHash
 from rif.hash import XformHash_bt24_BCC6_X3f
 
 from pyrosetta.rosetta.core.conformation import ResidueFactory
-from pyrosetta.rosetta.core.select.residue_selector import TrueResidueSelector
 from pyrosetta.rosetta.core import scoring
 
 logging.basicConfig(level=logging.WARN)
@@ -87,7 +86,8 @@ class PrivilegedResidues:
             dummy_pose.apply_transform(final)
             yield dummy_pose.clone()
 
-    def search(self, pose, groups=["bidentate"], selector = TrueResidueSelector()):
+	# NOTE(onalant): bring your own residue selector
+    def search(self, pose, groups=["bidentate"], selector):
         pairs_of_rays = []
 
         if np.any([x in groups for x in ["sc_sc", "bidentate"]]):

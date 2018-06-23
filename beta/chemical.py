@@ -1,4 +1,7 @@
-from collections import namedtuple, OrderedDict
+import re
+
+from collections import defaultdict, namedtuple, OrderedDict
+from geometry import create_ray
 
 # the order of the keys of this dictionary
 FunctionalGroup = namedtuple('FunctionalGroup', ['resName', 'donor', 'acceptor', 'atoms'])
@@ -42,4 +45,72 @@ rsd_to_fxnl_grp = {
     "TYR": ResInfo("OH_", ["CZ", "OH", "HH"]),
     "LYS": ResInfo("A__", ["NZ", "1HZ", "2HZ"])
 }
+
+def _n_rays(pose, selector):
+    selected = selector.apply(pose)
+    rays = { }
+
+    for i in range(1, len(pose.residues) + 1):
+        if (selected[i]):
+            rsd = pose.residue(i)
+
+            N = rsd.atom_index("N")
+            H = rsd.attached_H_begin(N)
+            
+            rays[i] = create_ray(rsd.xyz(H), rsd.xyz(N))
+
+    return rays
+
+def _c_rays(pose, selector):
+    selected = selector.apply(pose)
+    rays = { }
+
+    for i in range(1, len(pose.residues) + 1):
+        if (selected[i]):
+            rsd = pose.residue(i)
+
+            C = rsd.atom_index("C")
+            O = rsd.atom_index("O")
+            
+            rays[i] = create_ray(rsd.xyz(O), rsd.xyz(C))
+
+    return rays
+
+def _sc_donor(pose, selector):
+    selected = selector.apply(pose)
+    rays = defaultdict(list)
+
+    reg = re.compile(r"[A-Za-z]")
+
+    for i in range(1, len(pose.residues) + 1):
+        if (selected[i]):
+            rsd = pose.residue(i)
+
+            for j in range(rsd.first_sidechain_atom(), rsd.natoms() + 1):
+                name = reg.search(rsd.atom_name(j)).group(0)
+                hatm = rsd.attached_H_begin(j)
+
+                if (name == "N" and hatm <= rsd.natoms()):
+                    rays[i].append(create_ray(rsd.xyz(j), rsd.xyz(hatm)))
+
+    return dict(rays)
+
+def _sc_acceptor(pose, selector):
+    selected = selector.apply(pose)
+    rays = defaultdict(list)
+
+    reg = re.compile(r"[A-Za-z]")
+
+    for i in range(1, len(pose.residues) + 1):
+        if (selected[i]):
+            rsd = pose.residue(i)
+
+            for j in range(rsd.first_sidechain_atom(), rsd.natoms() + 1):
+                name = reg.search(rsd.atom_name(j)).group(0)
+                batm = rsd.atom_base(j)
+
+                if (name == "O"):
+                    rays[i].append(create_ray(rsd.xyz(j), rsd.xyz(batm)))
+
+    return dict(rays)
 
