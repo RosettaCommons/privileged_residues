@@ -1,4 +1,0 @@
-rif
-pyrosetta
-# NOTE(onalant): need to get around to making this...
-generic-table
