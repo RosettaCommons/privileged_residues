@@ -2,7 +2,7 @@ import re
 
 from collections import defaultdict, namedtuple
 from geometry import create_ray
-from itertools import product
+from itertools import combinations, product
 
 # the order of the keys of this dictionary
 FunctionalGroup = namedtuple('FunctionalGroup', ['resName', 'donor', 'acceptor', 'atoms'])
@@ -112,102 +112,102 @@ def _sc_acceptor(pose, selected):
     return dict(rays)
 
 def sc_bb_rays(pose, selector):
-	selected = selector.apply(pose)
+    selected = selector.apply(pose)
 
-	nrays = _n_rays(pose, selected)
-	crays = _c_rays(pose, selected)
+    nrays = _n_rays(pose, selected)
+    crays = _c_rays(pose, selected)
 
-	rays = []
+    rays = []
 
-	for i in nrays.keys():
-		if (i - 1 in crays):
-			rays.append(nrays[i], crays[i - 1])
+    for i in nrays.keys():
+        if (i - 1 in crays):
+            rays.append((nrays[i], crays[i - 1]))
 
-		rays.append((nrays[i], crays[i]))
+        rays.append((nrays[i], crays[i]))
 
-	return rays
+    return rays
 
 def sc_scbb_rays(pose, selector):
-	selected = selector.apply(pose)
+    selected = selector.apply(pose)
 
-	nrays = _n_rays(pose, selected)
-	crays = _c_rays(pose, selected)
+    nrays = _n_rays(pose, selected)
+    crays = _c_rays(pose, selected)
 
-	sc_acc = _sc_acceptor(pose, selector)
-	sc_don = _sc_donor(pose, selector)
+    sc_acc = _sc_acceptor(pose, selector)
+    sc_don = _sc_donor(pose, selector)
 
-	rays = []
+    rays = []
 
-	for i in nrays.keys():
-		if (i in sc_acc):
-			for jray in sc_acc[i]:
-				rays.append((nrays[i], jray))
-		if (i in sc_don):
-			for jray in sc_don[i]:
-				rays.append((jray, crays[i]))
+    for i in nrays.keys():
+        if (i in sc_acc):
+            for jray in sc_acc[i]:
+                rays.append((nrays[i], jray))
+        if (i in sc_don):
+            for jray in sc_don[i]:
+                rays.append((jray, crays[i]))
 
-	return rays
+    return rays
 
 def sc_sc_rays(pose, selector):
-	selected = selector.apply(pose)
+    selected = selector.apply(pose)
 
-	sc_acc = _sc_acceptor(pose, selected)
-	sc_don = _sc_donor(pose, selected)
+    sc_acc = _sc_acceptor(pose, selected)
+    sc_don = _sc_donor(pose, selected)
 
-	rays = []
+    rays = []
 
-	# WARN(onalant):
-	# This does not handle two acceptors or two donors in the
-	# same sidechain! We need to include donor and acceptor
-	# information in the rays for ``unified'' ray passing to
-	# work. Otherwise, we would need to query the table
-	# separately for each access.
-	for i in [x for x in sc_acc.keys() if x in sc_don.keys()]:
-		for (jray, kray) in product(sc_don[i], sc_acc[i]):
-			rays.append((jray, kray))
+    for i in [x for x in range(1, len(pose) + 1) if x in sc_don and x in sc_acc]:
+        for (jray, kray) in product(sc_don[i], sc_acc[i]):
+            rays.append((jray, kray))
 
-	return rays
+    for i in sc_don:
+        for (jray, kray) in combinations(sc_don[i], 2):
+            rays.append((jray, kray))
+
+    for i in sc_acc:
+        for (jray, kray) in combinations(sc_acc[i], 2):
+            rays.append((jray, kray))
+
+    return rays
 
 def donor_donor_rays(pose, selector):
-	selected = selector.apply(pose)
+    selected = selector.apply(pose)
 
-	sc_don = _sc_donor(pose, selected)
+    sc_don = _sc_donor(pose, selected)
 
-	rays = []
+    rays = []
 
-	for (i, j) in product(sc_don.keys(), sc_don.keys()):
-		if (i != j):
-			for (kray, lray) in product(sc_don[i], sc_don[j]):
-				rays.append((kray, lray))
-				rays.append((lray, kray))
+    for (i, j) in product(sc_don.keys(), sc_don.keys()):
+        if (i != j):
+            for (kray, lray) in product(sc_don[i], sc_don[j]):
+                rays.append((kray, lray))
 
-	return rays
+    return rays
 
 def acceptor_acceptor_rays(pose, selector):
-	selected = selector.apply(pose)
+    selected = selector.apply(pose)
 
-	sc_acc = _sc_acceptor(pose, selected)
+    sc_acc = _sc_acceptor(pose, selected)
 
-	rays = []
+    rays = []
 
-	for (i, j) in product(sc_acc.keys(), sc_acc.keys()):
-		if (i != j):
-			for (kray, lray) in product(sc_acc[i], sc_acc[j]):
-				rays.append((kray, lray))
-				rays.append((lray, kray))
+    for (i, j) in product(sc_acc.keys(), sc_acc.keys()):
+        if (i != j):
+            for (kray, lray) in product(sc_acc[i], sc_acc[j]):
+                rays.append((kray, lray))
 
-	return rays
+    return rays
 
 def donor_acceptor_rays(pose, selector):
-	selected = selector.apply(pose)
+    selected = selector.apply(pose)
 
-	sc_don = _sc_donor(pose, selected)
+    sc_don = _sc_donor(pose, selected)
 
-	rays = []
+    rays = []
 
-	for (i, j) in product(sc_don.keys(), sc_acc.keys()):
-		if (i != j):
-			for (kray, lray) in product(sc_don[i], sc_acc[j]):
-				rays.append((kray, lray))
+    for (i, j) in product(sc_don.keys(), sc_acc.keys()):
+        if (i != j):
+            for (kray, lray) in product(sc_don[i], sc_acc[j]):
+                rays.append((kray, lray))
 
-	return rays
+    return rays
