@@ -140,9 +140,11 @@ def sc_scbb_rays(pose, selector):
 
 	for i in nrays.keys():
 		if (i in sc_acc):
-			rays.append((nrays[i], sc_acc[i]))
+			for jray in sc_acc[i]:
+				rays.append((nrays[i], jray))
 		if (i in sc_don):
-			rays.append((sc_don[i], crays[i]))
+			for jray in sc_don[i]:
+				rays.append((jray, crays[i]))
 
 	return rays
 
@@ -154,8 +156,58 @@ def sc_sc_rays(pose, selector):
 
 	rays = []
 
-	for (i, j) in product(sc_don.keys(), sc_acc.keys()):
-		rays.append((sc_don[i], sc_acc[j]))
+	# WARN(onalant):
+	# This does not handle two acceptors or two donors in the
+	# same sidechain! We need to include donor and acceptor
+	# information in the rays for ``unified'' ray passing to
+	# work. Otherwise, we would need to query the table
+	# separately for each access.
+	for i in [x for x in sc_acc.keys() if x in sc_don.keys()]:
+		for (jray, kray) in product(sc_don[i], sc_acc[i]):
+			rays.append((jray, kray))
 
 	return rays
 
+def donor_donor_rays(pose, selector):
+	selected = selector.apply(pose)
+
+	sc_don = _sc_donor(pose, selected)
+
+	rays = []
+
+	for (i, j) in product(sc_don.keys(), sc_don.keys()):
+		if (i != j):
+			for (kray, lray) in product(sc_don[i], sc_don[j]):
+				rays.append((kray, lray))
+				rays.append((lray, kray))
+
+	return rays
+
+def acceptor_acceptor_rays(pose, selector):
+	selected = selector.apply(pose)
+
+	sc_acc = _sc_acceptor(pose, selected)
+
+	rays = []
+
+	for (i, j) in product(sc_acc.keys(), sc_acc.keys()):
+		if (i != j):
+			for (kray, lray) in product(sc_acc[i], sc_acc[j]):
+				rays.append((kray, lray))
+				rays.append((lray, kray))
+
+	return rays
+
+def donor_acceptor_rays(pose, selector):
+	selected = selector.apply(pose)
+
+	sc_don = _sc_donor(pose, selected)
+
+	rays = []
+
+	for (i, j) in product(sc_don.keys(), sc_acc.keys()):
+		if (i != j):
+			for (kray, lray) in product(sc_don[i], sc_acc[j]):
+				rays.append((kray, lray))
+
+	return rays
