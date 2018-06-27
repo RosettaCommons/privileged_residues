@@ -1,7 +1,8 @@
 import re
 
-from collections import defaultdict, namedtuple, OrderedDict
+from collections import defaultdict, namedtuple
 from geometry import create_ray
+from itertools import product
 
 # the order of the keys of this dictionary
 FunctionalGroup = namedtuple('FunctionalGroup', ['resName', 'donor', 'acceptor', 'atoms'])
@@ -46,8 +47,7 @@ rsd_to_fxnl_grp = {
     "LYS": ResInfo("A__", ["NZ", "1HZ", "2HZ"])
 }
 
-def _n_rays(pose, selector):
-    selected = selector.apply(pose)
+def _n_rays(pose, selected):
     rays = { }
 
     for i in range(1, len(pose.residues) + 1):
@@ -61,8 +61,7 @@ def _n_rays(pose, selector):
 
     return rays
 
-def _c_rays(pose, selector):
-    selected = selector.apply(pose)
+def _c_rays(pose, selected):
     rays = { }
 
     for i in range(1, len(pose.residues) + 1):
@@ -76,8 +75,7 @@ def _c_rays(pose, selector):
 
     return rays
 
-def _sc_donor(pose, selector):
-    selected = selector.apply(pose)
+def _sc_donor(pose, selected):
     rays = defaultdict(list)
 
     reg = re.compile(r"[A-Za-z]")
@@ -91,12 +89,11 @@ def _sc_donor(pose, selector):
                 hatm = rsd.attached_H_begin(j)
 
                 if (name == "N" and hatm <= rsd.natoms()):
-                    rays[i].append(create_ray(rsd.xyz(j), rsd.xyz(hatm)))
+                    rays[i].append(create_ray(rsd.xyz(hatm), rsd.xyz(j)))
 
     return dict(rays)
 
-def _sc_acceptor(pose, selector):
-    selected = selector.apply(pose)
+def _sc_acceptor(pose, selected):
     rays = defaultdict(list)
 
     reg = re.compile(r"[A-Za-z]")
@@ -113,4 +110,52 @@ def _sc_acceptor(pose, selector):
                     rays[i].append(create_ray(rsd.xyz(j), rsd.xyz(batm)))
 
     return dict(rays)
+
+def sc_bb_rays(pose, selector):
+	selected = selector.apply(pose)
+
+	nrays = _n_rays(pose, selected)
+	crays = _c_rays(pose, selected)
+
+	rays = []
+
+	for i in nrays.keys():
+		if (i - 1 in crays):
+			rays.append(nrays[i], crays[i - 1])
+
+		rays.append((nrays[i], crays[i]))
+
+	return rays
+
+def sc_scbb_rays(pose, selector):
+	selected = selector.apply(pose)
+
+	nrays = _n_rays(pose, selected)
+	crays = _c_rays(pose, selected)
+
+	sc_acc = _sc_acceptor(pose, selector)
+	sc_don = _sc_donor(pose, selector)
+
+	rays = []
+
+	for i in nrays.keys():
+		if (i in sc_acc):
+			rays.append((nrays[i], sc_acc[i]))
+		if (i in sc_don):
+			rays.append((sc_don[i], crays[i]))
+
+	return rays
+
+def sc_sc_rays(pose, selector):
+	selected = selector.apply(pose)
+
+	sc_acc = _sc_acceptor(pose, selected)
+	sc_don = _sc_donor(pose, selected)
+
+	rays = []
+
+	for (i, j) in product(sc_don.keys(), sc_acc.keys()):
+		rays.append((sc_don[i], sc_acc[j]))
+
+	return rays
 
