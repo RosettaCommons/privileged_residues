@@ -1,6 +1,5 @@
 import numpy as np
 import pyrosetta
-import typing
 
 from pyrosetta.bindings.utility import bind_method
 from pyrosetta.rosetta.numeric import xyzVector_double_t as V3
@@ -8,7 +7,7 @@ from pyrosetta.rosetta.numeric import xyzVector_double_t as V3
 from rif.geom import Ray
 
 @bind_method(pyrosetta.Pose)
-def apply_transform(self, xform: np.array) -> None:
+def apply_transform(self, xform):
     coords = []
 
     for res in self.residues:

@@ -1,8 +1,9 @@
 import re
 
 from collections import defaultdict, namedtuple
-from geometry import create_ray
 from itertools import combinations, product
+
+from .geometry import create_ray
 
 # the order of the keys of this dictionary
 FunctionalGroup = namedtuple('FunctionalGroup', ['resName', 'donor', 'acceptor', 'atoms'])

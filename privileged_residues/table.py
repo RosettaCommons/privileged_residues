@@ -7,7 +7,6 @@ import pandas
 class GenericTable:
 
     def __init__(self, dbpath):
-        assert(lru >= 0)
         self._table = h5py.File(dbpath, "r")
     
         self._indices = { }

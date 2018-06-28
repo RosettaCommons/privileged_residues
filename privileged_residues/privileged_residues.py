@@ -2,17 +2,16 @@ import logging
 import numpy as np
 import pyrosetta
 
-import .chemical
-import .geometry
-import .table
-import .util
+from . import chemical
+from . import geometry
+from . import table
+from . import util
 
 from rif.geom import Ray
 from rif.geom.ray_hash import RayToRay4dHash
 from rif.hash import XformHash_bt24_BCC6_X3f
 
 from pyrosetta.rosetta.core.conformation import ResidueFactory
-from pyrosetta.rosetta.core import scoring
 
 logging.basicConfig(level=logging.WARN)
 _logging_handler = "interactive"

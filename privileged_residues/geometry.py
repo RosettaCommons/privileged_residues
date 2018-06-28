@@ -1,10 +1,9 @@
 import numpy as np
 import pyrosetta
-import typing
 
 from numpy.testing import assert_allclose
 
-def rays_to_transform(first: np.array, second: np.array) -> np.array:
+def rays_to_transform(first, second):
     translation = first[:, 0]
 
     x = first[:, 1]
@@ -24,7 +23,7 @@ def rays_to_transform(first: np.array, second: np.array) -> np.array:
 
     return np.column_stack(matrix)
 
-def coords_to_transform(coords: np.array) -> np.array:
+def coords_to_transform(coords):
     assert(coords.shape == (3, 3))
 
     matrix = np.zeros((4, 4))
