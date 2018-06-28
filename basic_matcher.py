@@ -37,13 +37,6 @@ def make_parser():
 
     parser.add_argument("PDBFile", type=str, help="pose to match against")
 
-    parser.add_argument("--cart-resl", dest="cart_resl", type=float,
-                        default=0.1, help="Cartesian resolution of table")
-    parser.add_argument("--ori-resl", dest="ori_resl", type=float,
-                        default=2.0, help="Orientation resolution of table")
-    parser.add_argument("--cart-bound", dest="cart_bound", type=float,
-                        default=16.0, help="Cartesian boundary of table")
-
     parser.add_argument("--outpath", dest="outpath", type=str, default=None,
                         help="Output path")
 
@@ -81,11 +74,6 @@ def get_hits_for_interaction_type(ht_name_full, pdb_file, residues=None,
         selector = ResidueIndexSelector()
         for i in residues:
             selector.append_index(i)
-
-    ht_info = position_residue._fname_to_HTD(ht_name_full)
-    with open(ht_name_full, 'rb') as f:
-        print('Loading table for {} interactions...'.format(ht_info.type))
-        ht = pickle.load(f)
 
     pairs_of_rays = _look_for_interactions[ht_info.type](p, selector)
     

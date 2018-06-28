@@ -1,11 +1,11 @@
 import logging
 import numpy as np
 import pyrosetta
-import table
 
-import chemical
-import geometry
-import util
+import .chemical
+import .geometry
+import .table
+import .util
 
 from rif.geom import Ray
 from rif.geom.ray_hash import RayToRay4dHash
@@ -57,10 +57,7 @@ class PrivilegedResidues:
         dummy_pose = pyrosetta.pose_from_sequence("A", "fa_standard")
         res_type_set = dummy_pose.conformation().residue_type_set_for_conf()
 
-        def _numpy_to_rif_ray(r):
-            return r.astype('f4').reshape(r.shape[:-2] + (8,)).view(Ray)
-
-        hashed_rays = np.asscalar(self._raygrid.get_keys(*(_numpy_to_rif_ray(r) for r in [ray1, ray2])).squeeze())
+        hashed_rays = np.asscalar(self._raygrid.get_keys(*(util.numpy_to_rif(r) for r in [ray1, ray2])).squeeze())
 
         results = self._data[hashed_rays, group]
         try:
@@ -70,7 +67,7 @@ class PrivilegedResidues:
 
         for pos_info in results:
             try:
-                stored_frame = self._lattice.get_center([pos_info["transform"]])['raw'].squeeze()
+                stored_frame = self._lattice.get_center([pos_info["transform"]])["raw"].squeeze()
             except:
                 continue
 
@@ -87,8 +84,8 @@ class PrivilegedResidues:
             dummy_pose.apply_transform(final)
             yield dummy_pose.clone()
 
-	# NOTE(onalant): bring your own residue selector
-    def search(self, pose, groups=["bidentate"], selector):
+    # NOTE(onalant): bring your own residue selector
+    def search(self, pose, groups, selector):
         pairs_of_rays = []
 
         if np.any([x in groups for x in ["sc_sc", "bidentate"]]):
@@ -109,38 +106,6 @@ class PrivilegedResidues:
 
         for (r1, r2) in pairs_of_rays:
             yield from self.match(r1, r2, groups)
-
-    def filter_clash_minimize(p, hits, clash_cutoff=35.0, sfx=None, mmap=None):
-        if (not sfx):
-            sfx = scoring.ScoreFunctionFactory.create_score_function("beta_nov16")
-
-            sfx.set_weight(scoring.hbond_bb_sc, 2.0)
-            sfx.set_weight(scoring.hbond_sc, 2.0)
-
-        if (not mmap):
-            mmap = pyrosetta.rosetta.core.kinematics.MoveMap()
-
-            mmap.set_bb(False)
-            mmap.set_chi(False)
-            mmap.set_jump(1, True)
-
-        minmov = pyrosetta.rosetta.protocols.minimization_packing.MinMover(mmap, sfx, "dfpmin_armijo_nonmonotone", 0.01, False)
-
-        for hit in hits:
-            proto_pose = p.clone()
-            proto_pose.append_pose_by_jump(hit, len(proto_pose.residues))
-
-            sfx(proto_pose)
-
-            fa_rep = proto_pose.energies().total_energies()[scoring.fa_rep]
-            fa_elec = proto_pose.energies().total_energies()[scoring.fa_elec]
-
-            if (fa_rep + fa_elec > clash_cutoff):
-                continue
-
-            minmov.apply(proto_pose)
-
-            yield proto_pose
 
 _init_pyrosetta()
 

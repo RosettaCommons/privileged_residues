@@ -5,6 +5,8 @@ import typing
 from pyrosetta.bindings.utility import bind_method
 from pyrosetta.rosetta.numeric import xyzVector_double_t as V3
 
+from rif.geom import Ray
+
 @bind_method(pyrosetta.Pose)
 def apply_transform(self, xform: np.array) -> None:
     coords = []
@@ -40,4 +42,7 @@ def __iter__(self):
 	"""
 	for value in [self.x, self.y, self.z]:
 		yield value
+
+def numpy_to_rif(r):
+    return r.astype("f4").reshape(r.shape[:-2] + (8,)).view(Ray)
 
