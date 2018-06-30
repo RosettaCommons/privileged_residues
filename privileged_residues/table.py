@@ -2,8 +2,6 @@ import h5py
 import numpy as np
 import pandas
 
-# NOTE(onalant): <C-g> will show current file in nvi!
-
 class GenericTable:
 
     def __init__(self, dbpath):

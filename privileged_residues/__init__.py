@@ -3,5 +3,5 @@ import privileged_residues
 
 from .privileged_residues import PrivilegedResidues
 
-__all__ = ["PrivilegedResidues", "chemical", "geometry", "postproc", "table", "util"]
+__all__ = ["PrivilegedResidues", "chemical", "geometry", "postproc", "util"]
 

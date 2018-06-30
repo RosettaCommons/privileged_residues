@@ -88,20 +88,20 @@ class PrivilegedResidues:
         pairs_of_rays = []
 
         if np.any([x in groups for x in ["sc_sc", "bidentate"]]):
-            pairs_of_rays += look_for_sc_sc_bidentates(p, selector)
+            pairs_of_rays += chemical.sc_sc_rays(pose, selector)
         if np.any([x in groups for x in ["sc_scbb", "bidentate"]]):
-            pairs_of_rays += look_for_sc_scbb_bidentates(p, selector)
+            pairs_of_rays += chemical.sc_scbb_rays(pose, selector)
         if np.any([x in groups for x in ["sc_bb", "bidentate"]]):
-            pairs_of_rays += look_for_sc_bb_bidentates(p, selector)
+            pairs_of_rays += chemical.sc_bb_rays(pose, selector)
 
         if np.any([x in groups for x in ["acceptor_acceptor", "network"]]):
-            pairs_of_rays += look_up_connected_network(p, selector, accA=True, accB=True)
+            pairs_of_rays += chemical.acceptor_acceptor_rays(pose, selector)
         if np.any([x in groups for x in ["acceptor_donor", "network"]]):
-            pairs_of_rays += look_up_connected_network(p, selector, accA=True, donB=True)
+            pairs_of_rays += chemical.donor_acceptor_rays(pose, selector)
         if np.any([x in groups for x in ["donor_acceptor", "network"]]):
-            pairs_of_rays += look_up_connected_network(p, selector, donA=True, accB=True)
+            pairs_of_rays += chemical.donor_acceptor_rays(pose, selector)
         if np.any([x in groups for x in ["donor_donor", "network"]]):
-            pairs_of_rays += look_up_connected_network(p, selector, donA=True, donB=True)
+            pairs_of_rays += chemical.donor_donor_rays(pose, selector)
 
         for (r1, r2) in pairs_of_rays:
             yield from self.match(r1, r2, groups)
