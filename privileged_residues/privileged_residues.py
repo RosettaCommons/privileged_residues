@@ -104,7 +104,8 @@ class PrivilegedResidues:
             pairs_of_rays += chemical.donor_donor_rays(pose, selector)
 
         for (r1, r2) in pairs_of_rays:
-            yield from self.match(r1, r2, groups)
+            for group in groups:
+                yield from self.match(r1, r2, group)
 
 _init_pyrosetta()
 

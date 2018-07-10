@@ -134,8 +134,8 @@ def sc_scbb_rays(pose, selector):
     nrays = _n_rays(pose, selected)
     crays = _c_rays(pose, selected)
 
-    sc_acc = _sc_acceptor(pose, selector)
-    sc_don = _sc_donor(pose, selector)
+    sc_acc = _sc_acceptor(pose, selected)
+    sc_don = _sc_donor(pose, selected)
 
     rays = []
 
