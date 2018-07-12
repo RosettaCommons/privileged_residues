@@ -19,8 +19,8 @@ selector = pyrosetta.rosetta.core.select.residue_selector.TrueResidueSelector()
 pres = privileged_residues.PrivilegedResidues()
 
 for (n, p) in enumerate(pres.search(pose, ["sc_sc"], selector)):
-	print("Dumping match %d" % (n))
-	p.dump_pdb("/home/onalant/dump/2018-07-09_PResiduesDump/foo%d.pdb" % (n))
+    print("Dumping match %d" % (n))
+    p.dump_pdb("/home/onalant/dump/2018-07-09_PResiduesDump/foo%d.pdb" % (n))
 
 print("DONE")
 

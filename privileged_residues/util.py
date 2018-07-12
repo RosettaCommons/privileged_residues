@@ -18,9 +18,9 @@ def apply_transform(self, xform):
     index = 0
     transformed_coords = np.dot(xform, np.stack(coords).T)
 
-    for res in self.residues:
-        for atom in res.atoms():
-            atom.xyz(V3(*transformed_coords[:3, index]))
+    for i in range(1, len(self) + 1):
+        for j in range(1, self.residue(i).natoms() + 1):
+            self.residue(i).atom(j).xyz(V3(*transformed_coords[:3, index]))
             index += 1
 
 @bind_method(pyrosetta.rosetta.numeric.xyzVector_double_t)
