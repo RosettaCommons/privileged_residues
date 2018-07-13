@@ -92,7 +92,7 @@ def _sc_donor(pose, selected):
                     for hatm in range(rsd.attached_H_begin(j), rsd.attached_H_end(j) + 1):
                         rays[i].append(create_ray(rsd.xyz(hatm), rsd.xyz(j)))
 
-    return dict(rays)
+    return rays
 
 def _sc_acceptor(pose, selected):
     rays = defaultdict(list)
@@ -110,7 +110,7 @@ def _sc_acceptor(pose, selected):
                 if (name == "O"):
                     rays[i].append(create_ray(rsd.xyz(j), rsd.xyz(batm)))
 
-    return dict(rays)
+    return rays
 
 def sc_bb_rays(pose, selector):
     selected = selector.apply(pose)
@@ -140,12 +140,9 @@ def sc_scbb_rays(pose, selector):
     rays = []
 
     for i in nrays.keys():
-        if (i in sc_acc):
-            for jray in sc_acc[i]:
-                rays.append((nrays[i], jray))
-        if (i in sc_don):
-            for jray in sc_don[i]:
-                rays.append((jray, crays[i]))
+        for jray in sc_acc[i] + sc_don[i]:
+            rays.append((nrays[i], jray))
+            rays.append((jray, crays[i]))
 
     return rays
 
@@ -157,15 +154,13 @@ def sc_sc_rays(pose, selector):
 
     rays = []
 
-    for i in [x for x in range(1, len(pose) + 1) if x in sc_don and x in sc_acc]:
+    for i in range(1, len(pose) + 1):
         for (jray, kray) in product(sc_don[i], sc_acc[i]):
             rays.append((jray, kray))
 
-    for i in sc_don:
         for (jray, kray) in combinations(sc_don[i], 2):
             rays.append((jray, kray))
 
-    for i in sc_acc:
         for (jray, kray) in combinations(sc_acc[i], 2):
             rays.append((jray, kray))
 
