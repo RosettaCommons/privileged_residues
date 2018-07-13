@@ -3,25 +3,21 @@ import pyrosetta
 
 from pyrosetta.bindings.utility import bind_method
 from pyrosetta.rosetta.numeric import xyzVector_double_t as V3
+from pyrosetta.toolbox.numpy_utils import numpy_to_rosetta
 
 from rif.geom import Ray
 
 @bind_method(pyrosetta.Pose)
 def apply_transform(self, xform):
-    coords = []
+	""" description - note the type and shape of the arguments """
 
-    for res in self.residues:
-        for atom in res.atoms():
-            c = np.array(list(atom.xyz()) + [1.0], dtype=np.float)
-            coords.append(c)
+	assert(xform.shape == (4, 4)) # homogeneous transform
 
-    index = 0
-    transformed_coords = np.dot(xform, np.stack(coords).T)
+	M = numpy_to_rosetta(xform[:3, :3])
+	v = V3(*xform[:3, 3])
 
-    for i in range(1, len(self) + 1):
-        for j in range(1, self.residue(i).natoms() + 1):
-            self.residue(i).atom(j).xyz(V3(*transformed_coords[:3, index]))
-            index += 1
+	self.apply_transform_Rx_plus_v(M, v)
+
 
 @bind_method(pyrosetta.rosetta.numeric.xyzVector_double_t)
 def __iter__(self):
