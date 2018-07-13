@@ -6,7 +6,6 @@ import random
 
 from datetime import date
 from os import path
-from privileged_residues import postproc
 
 test_file = path.join(path.dirname(path.abspath(__file__)), "data", "sc_bb_example.pdb")
 pose = pyrosetta.pose_from_pdb(test_file)

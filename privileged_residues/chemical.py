@@ -87,10 +87,10 @@ def _sc_donor(pose, selected):
 
             for j in range(rsd.first_sidechain_atom(), rsd.natoms() + 1):
                 name = reg.search(rsd.atom_name(j)).group(0)
-                hatm = rsd.attached_H_begin(j)
 
-                if (name == "N" and hatm <= rsd.natoms()):
-                    rays[i].append(create_ray(rsd.xyz(hatm), rsd.xyz(j)))
+                if (name == "N" and rsd.attached_H_begin(j) <= rsd.natoms()):
+                    for hatm in range(rsd.attached_H_begin(j), rsd.attached_H_end(j) + 1):
+                        rays[i].append(create_ray(rsd.xyz(hatm), rsd.xyz(j)))
 
     return dict(rays)
 

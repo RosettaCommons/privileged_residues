@@ -2,6 +2,7 @@ import numpy as np
 import pyrosetta
 
 from pyrosetta.bindings.utility import bind_method
+from pyrosetta.rosetta.core.import_pose import pose_from_pdbstring
 from pyrosetta.rosetta.numeric import xyzVector_double_t as V3
 from pyrosetta.toolbox.numpy_utils import numpy_to_rosetta
 
@@ -9,14 +10,14 @@ from rif.geom import Ray
 
 @bind_method(pyrosetta.Pose)
 def apply_transform(self, xform):
-	""" description - note the type and shape of the arguments """
+    """ description - note the type and shape of the arguments """
 
-	assert(xform.shape == (4, 4)) # homogeneous transform
+    assert(xform.shape == (4, 4)) # homogeneous transform
 
-	M = numpy_to_rosetta(xform[:3, :3])
-	v = V3(*xform[:3, 3])
+    M = numpy_to_rosetta(xform[:3, :3])
+    v = V3(*xform[:3, 3])
 
-	self.apply_transform_Rx_plus_v(M, v)
+    self.apply_transform_Rx_plus_v(M, v)
 
 
 @bind_method(pyrosetta.rosetta.numeric.xyzVector_double_t)
@@ -40,4 +41,26 @@ def __iter__(self):
 
 def numpy_to_rif(r):
     return r.astype("f4").reshape(r.shape[:-2] + (8,)).view(Ray)
+
+def models_from_pdb(fname):
+    p = pyrosetta.Pose()
+
+    with open(fname, "r") as f:
+        model = []
+
+        for l in f:
+            if (l.startswith("#")):
+                continue
+
+            line = l.rstrip()
+            model.append(line)
+
+            if (line.startswith("ENDMDL")):
+                pose_from_pdbstring(p, pdbcontents="\n".join(model))
+                yield p.clone()
+                model = []
+
+        if (len(model)):
+            pose_from_pdbstring(p, pdbcontents="\n".join(model))
+            yield p.clone()
 
