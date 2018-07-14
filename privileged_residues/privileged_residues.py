@@ -103,6 +103,7 @@ class PrivilegedResidues:
         if np.any([x in groups for x in ["donor_donor", "network"]]):
             pairs_of_rays += chemical.donor_donor_rays(pose, selector)
 
+		# TODO(onalant): Need to separate searches into respective ray bins
         for (r1, r2) in pairs_of_rays:
             for group in groups:
                 yield from self.match(r1, r2, group)
