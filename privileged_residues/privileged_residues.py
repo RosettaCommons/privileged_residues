@@ -85,27 +85,26 @@ class PrivilegedResidues:
 
     # NOTE(onalant): bring your own residue selector
     def search(self, pose, groups, selector):
-        pairs_of_rays = []
+        pairs_of_rays = { }
 
         if np.any([x in groups for x in ["sc_sc", "bidentate"]]):
-            pairs_of_rays += chemical.sc_sc_rays(pose, selector)
+            pairs_of_rays["sc_sc"] = chemical.sc_sc_rays(pose, selector)
         if np.any([x in groups for x in ["sc_scbb", "bidentate"]]):
-            pairs_of_rays += chemical.sc_scbb_rays(pose, selector)
+            pairs_of_rays["sc_scbb"] = chemical.sc_scbb_rays(pose, selector)
         if np.any([x in groups for x in ["sc_bb", "bidentate"]]):
-            pairs_of_rays += chemical.sc_bb_rays(pose, selector)
+            pairs_of_rays["sc_bb"] = chemical.sc_bb_rays(pose, selector)
 
         if np.any([x in groups for x in ["acceptor_acceptor", "network"]]):
-            pairs_of_rays += chemical.acceptor_acceptor_rays(pose, selector)
+            pairs_of_rays["acceptor_acceptor"] = chemical.acceptor_acceptor_rays(pose, selector)
         if np.any([x in groups for x in ["acceptor_donor", "network"]]):
-            pairs_of_rays += chemical.donor_acceptor_rays(pose, selector)
+            pairs_of_rays["acceptor_donor"] = chemical.donor_acceptor_rays(pose, selector)
         if np.any([x in groups for x in ["donor_acceptor", "network"]]):
-            pairs_of_rays += chemical.donor_acceptor_rays(pose, selector)
+            pairs_of_rays["donor_acceptor"] = chemical.donor_acceptor_rays(pose, selector)
         if np.any([x in groups for x in ["donor_donor", "network"]]):
-            pairs_of_rays += chemical.donor_donor_rays(pose, selector)
+            pairs_of_rays["donor_donor"] = chemical.donor_donor_rays(pose, selector)
 
-		# TODO(onalant): Need to separate searches into respective ray bins
-        for (r1, r2) in pairs_of_rays:
-            for group in groups:
+        for group in pairs_of_rays:
+            for (r1, r2) in pairs_of_rays[group]:
                 yield from self.match(r1, r2, group)
 
 _init_pyrosetta()
