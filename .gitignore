@@ -80,6 +80,7 @@ tags
 
 # Miscellanea
 local/
+tests/data
 
 # NFS temporary files
 .nfs*
