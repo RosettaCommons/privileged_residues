@@ -29,13 +29,20 @@ def test_bidentate(bdtype, respair):
     ref_res = pose.residue(2)
     ref_coords = np.stack([ref_res.atom(n).xyz() for n in chemical.rsd_to_fxnl_grp[ref_res.name()].atoms])
 
+    min_rmsd = 1000.
+
     for p in pres.search(pose, [bdtype], selector):
         res = p.residue(1)
         coords = np.stack([res.atom(n).xyz() for n in chemical.functional_groups[res.name()].atoms])
 
         RMSD = rmsd(ref_coords, coords)
+        
+        if (RMSD < min_rmsd):
+            min_rmsd = RMSD
+
         if (RMSD < 0.25):
             return
 
+    print("Minimum RMSD across matched structures: %.3f" % min_rmsd)
     assert(False)
 

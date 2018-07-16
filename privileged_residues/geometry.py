@@ -75,7 +75,7 @@ def create_ray(center, base):
     ray[-1, 0] = 1.  # point!
 
     ray[:-1, 1] = direction
-    ray[-1, 1] = 0.  # point!
+    ray[-1, 1] = 0.  # direction!
 
     return ray
 
