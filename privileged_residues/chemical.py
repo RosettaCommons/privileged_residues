@@ -197,6 +197,7 @@ def acceptor_acceptor_rays(pose, selector):
 def donor_acceptor_rays(pose, selector):
     selected = selector.apply(pose)
 
+    sc_acc = _sc_acceptor(pose, selected)
     sc_don = _sc_donor(pose, selected)
 
     rays = []
