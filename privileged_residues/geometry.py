@@ -4,6 +4,19 @@ import pyrosetta
 from numpy.testing import assert_allclose
 
 def rays_to_transform(first, second):
+    """From two rays, construct a homogeneous transform.
+
+    Parameters
+    ----------
+    first : np.ndarray
+    second : np.ndarray
+
+    Returns
+    -------
+    np.ndarray
+        Homogeneous transform constructed from the input rays.
+    """
+
     translation = first[:, 0]
 
     x = first[:, 1]
@@ -24,6 +37,18 @@ def rays_to_transform(first, second):
     return np.column_stack(matrix)
 
 def coords_to_transform(coords):
+    """From a set of coordinates, construct a homogeneous transform.
+
+    Parameters
+    ----------
+    coords : np.ndarray
+
+    Returns
+    -------
+    np.ndarray
+        Homogeneous transform constructed from the input coordinates.
+    """
+
     assert(coords.shape == (3, 3))
 
     matrix = np.zeros((4, 4))
@@ -50,22 +75,27 @@ def create_ray(center, base):
     """Create a ray of unit length from two points in space and return
     it.
 
-    Notes:
-        The ray is constructed such that:
+    Notes
+    -----
+    The ray is constructed such that:
 
-        1. The direction points from `base` to `center` and is unit
-           length.
-        2. The point at which the ray is centered is at `center`.
+    1. The direction points from `base` to `center` and is unit length.
+    2. The point at which the ray is centered is at `center`.
 
-    Args:
-        center (numpy.array): A (1, 3) array representing the
-            coordinate at which to center the resulting ray.
-        base (numpy.array): A (1, 3) array representing the base used
-            to determine the direction of the resulting ray.
+    Parameters
+    ----------
+    center : numpy.ndarray
+        A (1, 3) array representing the coordinate at which to center
+        the resulting ray.
+    base : numpy.ndarray
+        A (1, 3) array representing the base used to determine the
+        direction of the resulting ray.
 
-    Returns:
-        numpy.array: A (2,4) array representing a ray in space with a
-        point and a unit direction.
+    Returns
+    -------
+    numpy.ndarray
+        A (2,4) array representing a ray in space with a point and a
+        unit direction.
     """
     direction = center - base
     direction /= np.linalg.norm(direction)

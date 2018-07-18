@@ -10,7 +10,13 @@ from rif.geom import Ray
 
 @bind_method(pyrosetta.Pose)
 def apply_transform(self, xform):
-    """ description - note the type and shape of the arguments """
+    """Apply a homogeneous transform to the current pose.
+
+    Parameters
+    ----------
+    xform : np.ndarray
+        A homogeneous transform.
+    """
 
     assert(xform.shape == (4, 4)) # homogeneous transform
 
@@ -22,27 +28,54 @@ def apply_transform(self, xform):
 
 @bind_method(pyrosetta.rosetta.numeric.xyzVector_double_t)
 def __iter__(self):
-	"""Generator for pyrosetta.rosetta.numeric.xyzVector_double_t
-	instances. Makes casting directly to numpy.array possible.
+    """Generator for pyrosetta.rosetta.numeric.xyzVector_double_t
+    instances. Makes casting directly to numpy.array possible.
 
-	Yields:
-		float: The next coordinate value in the vector in the order
-			x, y, z.
+    Yields
+    ------
+    float
+        The next coordinate value in the vector in the order x, y, z.
 
-	Examples:
-		>>> print([i for i in pose.residues[1].xyz(1)])
-		[13.092, 4.473, -2.599]
+    Examples
+    --------
+    >>> print([i for i in pose.residues[1].xyz(1)])
+    [13.092, 4.473, -2.599]
 
-		>>> np.array([*pose.residues[1].xyz(1)])
-		array([ 13.092,   4.473,  -2.599])
-	"""
-	for value in [self.x, self.y, self.z]:
-		yield value
+    >>> np.array([*pose.residues[1].xyz(1)])
+    array([ 13.092,   4.473,  -2.599])
+    """
+
+    for value in [self.x, self.y, self.z]:
+        yield value
 
 def numpy_to_rif(r):
+    """Convert from NumPy ray representation to RIF ray representation.
+
+    Parameters
+    ----------
+    r : np.ndarray
+        Input NumPy ray.
+
+    Returns
+    -------
+    rif.geom.Ray
+    """
     return r.astype("f4").reshape(r.shape[:-2] + (8,)).view(Ray)
 
 def models_from_pdb(fname):
+    """Get models from a PDB as individual poses.
+
+    Parameters
+    ----------
+    fname : str
+        Path to a PDB.
+
+    Yields
+    ------
+    pyrosetta.Pose
+        The next model in the PDB.
+    """
+
     p = pyrosetta.Pose()
 
     with open(fname, "r") as f:

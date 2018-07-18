@@ -5,6 +5,30 @@ from pyrosetta.rosetta.core.scoring import ScoreFunctionFactory
 from pyrosetta.rosetta.protocols.minimization_packing import MinMover
 
 def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, sfx = None, mmap = None):
+    """Filter match output for clashes, then minimize the remaining
+    structures against the target pose.
+
+    Parameters
+    ----------
+    pose : pyrosetta.Pose
+        Target structure.
+    hits : np.ndarray
+        Set of functional group matches against positions in the target.
+    clash_cutoff : float
+        Maximum tolerated increase in score terms during clash checking.
+    sfx : pyrosetta.rosetta.core.scoring.ScoreFunction, optional
+        Scorefunction to use during minimization. If left as None, a
+        default scorefunction is constructed.
+    mmap : pyrosetta.rosetta.protocols.minimization_packing.MinMover, optional
+        Movemap to use during minimization. If left as None, a default
+        movemap is constructed.
+
+    Yields
+    ------
+    pyrosetta.Pose
+        Next target structure and matched functional group, minimized
+        and in complex.
+    """
     if (not sfx):
         sfx = ScoreFunctionFactory.create_score_function("beta_nov16")
 

@@ -22,6 +22,8 @@ BOUND = 1000
 MODE = "fa_standard"
 
 def _init_pyrosetta():
+    """Load PyRosetta with the necessary parameter files"""
+
     from os import path
 
     _dir = path.join(path.dirname(__file__), "data", "functional_groups")
@@ -41,6 +43,14 @@ def _init_pyrosetta():
 class PrivilegedResidues:
 
     def __init__(self, path = "/home/onalant/dump/2018-05-07_datatables/database.h5"):
+        """
+        Parameters
+        ----------
+        path : str, optional
+            Path to an HDF5 database. Defaults to a pre-generated
+            database.
+        """
+
         self._data = table.GenericTable(path)
 
         cart_resl = self._data._table.attrs["cart_resl"]
@@ -53,6 +63,37 @@ class PrivilegedResidues:
     # bidentate: "sc_sc", "sc_scbb", "sc_bb"
     # network: "acceptor_acceptor", "acceptor_donor", "donor_acceptor", "donor_donor"
     def match(self, ray1, ray2, group):
+        """Construct all of the matched structures for a given ray pair
+        and group.
+
+        Notes
+        -----
+        The following are the available search groups.
+
+        Bidentates:
+            - "sc_sc"
+            - "sc_scbb"
+            - "sc_bb"
+        Networks:
+            - "acceptor_acceptor"
+            - "acceptor_donor"
+            - "donor_acceptor"
+            - "donor_donor"
+
+        Parameters
+        ----------
+        ray1 : np.ndarray
+        ray2 : np.ndarray
+            Rays used to search in the underlying database.
+        group : str
+            Dataset to search in.
+
+        Yields
+        ------
+        pyrosetta.Pose
+            Functional group as placed by transform from table.
+        """
+
         dummy_pose = pyrosetta.pose_from_sequence("A", "fa_standard")
         res_type_set = dummy_pose.conformation().residue_type_set_for_conf()
 
@@ -85,6 +126,18 @@ class PrivilegedResidues:
 
     # NOTE(onalant): bring your own residue selector
     def search(self, pose, groups, selector):
+        """Search for privileged interactions in a pose.
+
+        Parameters
+        ----------
+        pose : pyrosetta.Pose
+            Target structure.
+        groups : list of str
+            Datasets or groups to search for matches in.
+        selector : pyrosetta.rosetta.core.select.residue_selector.ResidueSelector
+            Residue selector to apply to the pose.
+        """
+
         pairs_of_rays = { }
 
         if np.any([x in groups for x in ["sc_sc", "bidentate"]]):
