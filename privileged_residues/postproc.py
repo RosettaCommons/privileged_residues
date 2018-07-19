@@ -1,7 +1,7 @@
 import pyrosetta
 
+from pyrosetta.rosetta.core import scoring
 from pyrosetta.rosetta.core.kinematics import MoveMap
-from pyrosetta.rosetta.core.scoring import ScoreFunctionFactory
 from pyrosetta.rosetta.protocols.minimization_packing import MinMover
 
 def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, sfx = None, mmap = None):
@@ -30,7 +30,7 @@ def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, sfx = None, mmap = No
         and in complex.
     """
     if (not sfx):
-        sfx = ScoreFunctionFactory.create_score_function("beta_nov16")
+        sfx = scoring.ScoreFunctionFactory.create_score_function("beta_nov16")
 
         sfx.set_weight(scoring.hbond_bb_sc, 2.0)
         sfx.set_weight(scoring.hbond_sc, 2.0)
