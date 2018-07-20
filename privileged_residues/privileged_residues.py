@@ -119,7 +119,10 @@ class PrivilegedResidues:
             coords = [np.array([*dummy_pose.residues[1].xyz(atom)]) for atom in pos_grp.atoms]
             c = np.stack(coords)
 
-            pos_frame = geometry.coords_to_transform(c)
+            try:
+                pos_frame = geometry.coords_to_transform(c)
+            except:
+                continue
             final = np.dot(np.dot(ray_frame, stored_frame), np.linalg.inv(pos_frame))
             dummy_pose.apply_transform(final)
             yield dummy_pose.clone()
