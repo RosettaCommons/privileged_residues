@@ -1,10 +1,13 @@
+import numpy as np
 import pyrosetta
 
 from pyrosetta.rosetta.core import scoring
 from pyrosetta.rosetta.core.kinematics import MoveMap
 from pyrosetta.rosetta.protocols.minimization_packing import MinMover
 
-def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, sfx = None, mmap = None):
+from rmsd import rmsd
+
+def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, rmsd_cutoff = 0.5, sfx = None, mmap = None):
     """Filter match output for clashes, then minimize the remaining
     structures against the target pose.
 
@@ -57,7 +60,11 @@ def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, sfx = None, mmap = No
             continue
 
         minmov.apply(proto_pose)
+        minimized = proto_pose.split_by_chain(proto_pose.num_chains())
+        
+        ori_coords = np.array([atom.xyz() for res in hit.residues for atom in res.atoms()])
+        min_coords = np.array([atom.xyz() for res in minimized.residues for atom in res.atoms()])
 
-        # NOTE(onalant): Which one is the ideal solution here?
-        yield proto_pose #.split_by_chain(proto_pose.num_chains())
+        if (rmsd(ori_coords, min_coords) < rmsd_cutoff):
+            yield minimized
 
