@@ -51,6 +51,12 @@ def make_parser():
                              "Allowed values are: 'acceptor_acceptor', "
                              "'acceptor_donor', 'donor_acceptor', " +
                              "'donor_donor'.")
+
+    feature_parser = parser.add_mutually_exclusive_group(required=False)
+    feature_parser.add_argument('--reduced-output', dest='reduced_output', action='store_true')
+    feature_parser.add_argument('--no-reduced-output', dest='reduced_output', action='store_false')
+    parser.set_defaults(reduced_output=False)
+
     return parser
 
 def main(argv):
