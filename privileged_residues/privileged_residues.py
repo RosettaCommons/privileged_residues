@@ -62,7 +62,7 @@ class PrivilegedResidues:
 
     # bidentate: "sc_sc", "sc_scbb", "sc_bb"
     # network: "acceptor_acceptor", "acceptor_donor", "donor_acceptor", "donor_donor"
-    def match(self, ray1, ray2, group):
+    def match(self, ray1, ray2, group, limit = 0):
         """Construct all of the matched structures for a given ray pair
         and group.
 
@@ -105,7 +105,7 @@ class PrivilegedResidues:
         except:
             return []
 
-        for pos_info in results:
+        for pos_info in results[:limit] if limit else results:
             try:
                 stored_frame = self._lattice.get_center([pos_info["transform"]])["raw"].squeeze()
             except:
@@ -128,7 +128,7 @@ class PrivilegedResidues:
             yield dummy_pose.clone()
 
     # NOTE(onalant): bring your own residue selector
-    def search(self, pose, groups, selector):
+    def search(self, pose, groups, selector, limit = 0):
         """Search for privileged interactions in a pose.
 
         Parameters
@@ -161,7 +161,7 @@ class PrivilegedResidues:
 
         for group in pairs_of_rays:
             for (r1, r2) in pairs_of_rays[group]:
-                yield from self.match(r1, r2, group)
+                yield from self.match(r1, r2, group, limit = limit)
 
 _init_pyrosetta()
 

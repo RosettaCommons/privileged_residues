@@ -34,7 +34,7 @@ def make_parser():
     parser.add_argument("--clash-cutoff", dest="clash_cutoff", type=float,
                         default=35., help="Tolerance for clash checking")
 
-    parser.add_argument("--n-best", dest="n_best", type=int, default=10,
+    parser.add_argument("--n-cutoff", dest="n_cutoff", type=int, default=10,
                         help="Number of top interactions to isolate")
 
 #     parser.add_argument("--params", dest="params", type=str, nargs="*",
@@ -100,7 +100,7 @@ def main(argv):
     makedirs(out, exist_ok=True)
     p.dump_pdb(path.join(out, "ori.pdb"))
 
-    hits = pr.search(p, args.bidentates + args.networks, selector)
+    hits = pr.search(p, args.bidentates + args.networks, selector, limit = args.n_cutoff if args.reduced_output else 0)
     for n, hit in enumerate(filter_clash_minimize(p, hits)):
         hit.dump_pdb(path.join(out, "result_%05d.pdb" % (n)))
 
