@@ -34,8 +34,8 @@ def make_parser():
     parser.add_argument("--clash-cutoff", dest="clash_cutoff", type=float,
                         default=35., help="Tolerance for clash checking")
 
-    parser.add_argument("--n-best", dest="n_best", type=int, default=10,
-                        help="Number of top interactions to isolate")
+    parser.add_argument("--n-cutoff", dest="n_cutoff", type=int, default=10,
+                        help="Number of interactions to isolate")
 
 #     parser.add_argument("--params", dest="params", type=str, nargs="*",
 #                         help="Additional parameter files")
@@ -58,6 +58,30 @@ def make_parser():
     parser.set_defaults(reduced_output=False)
 
     return parser
+
+def process_full(pr, p, args, out):
+    selector = ResidueIndexSelector()
+
+    for residue in args.residues:
+        selector.append_index(residue)
+
+    hits = pr.search(p, args.bidentates + args.networks, selector)
+
+    for n, hit in enumerate(filter_clash_minimize(p, hits)):
+        hit.dump_pdb(path.join(out, "result_%05d.pdb" % (n)))
+
+def process_reduced(pr, p, args, out):
+    for residue in args.residues:
+        selector = ResidueIndexSelector()
+        selector.append_index(residue)
+
+        hits = pr.search(p, args.bidentates + args.networks, selector)
+
+        for n, hit in enumerate(filter_clash_minimize(p, hits)):
+            if (n >= args.n_cutoff):
+                break
+
+            hit.dump_pdb(path.join(out, "result_res%03d_%05d.pdb" % (residue, n)))
 
 def main(argv):
     parser = make_parser()
@@ -90,19 +114,17 @@ def main(argv):
     # easily call that function and pass a pre-configured ResidueSelector in.
     # selector = SecondaryStructureSelector("L")
 
-    selector = TrueResidueSelector()
-    if args.residues is not None:
-        selector = ResidueIndexSelector()
-        for idx in args.residues:
-            selector.append_index(idx)
-
     out = path.expanduser(args.outpath)
     makedirs(out, exist_ok=True)
     p.dump_pdb(path.join(out, "ori.pdb"))
 
-    hits = pr.search(p, args.bidentates + args.networks, selector)
-    for n, hit in enumerate(filter_clash_minimize(p, hits)):
-        hit.dump_pdb(path.join(out, "result_%05d.pdb" % (n)))
+    if (args.residues is None):
+        args.residues = range(1, len(p) + 1)
+
+    if (args.reduced_output):
+        process_reduced(pr, p, args, out)
+    else:
+        process_full(pr, p, args, out)
 
 if __name__ == "__main__":
     freeze_support()
