@@ -1,6 +1,8 @@
 import numpy as np
 import pyrosetta
 
+from numpy.testing import assert_allclose
+
 from pyrosetta.bindings.utility import bind_method
 from pyrosetta.rosetta.core.import_pose import pose_from_pdbstring
 from pyrosetta.rosetta.numeric import xyzVector_double_t as V3
@@ -19,11 +21,12 @@ def apply_transform(self, xform):
     """
 
     assert(xform.shape == (4, 4)) # homogeneous transform
+    assert_allclose(np.linalg.det(xform[:3,:3]), 1., atol=1e-6)
 
-    M = numpy_to_rosetta(xform[:3, :3])
+    Rx = numpy_to_rosetta(xform[:3, :3])
     v = V3(*xform[:3, 3])
 
-    self.apply_transform_Rx_plus_v(M, v)
+    self.apply_transform_Rx_plus_v(Rx, v)
 
 
 @bind_method(pyrosetta.rosetta.numeric.xyzVector_double_t)
