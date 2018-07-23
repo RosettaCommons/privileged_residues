@@ -7,7 +7,7 @@ from pyrosetta.rosetta.protocols.minimization_packing import MinMover
 
 from rmsd import rmsd
 
-def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, rmsd_cutoff = 0.5, sfx = None, mmap = None):
+def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, rmsd_cutoff = 0.5, sfx = None, mmap = None, limit = 0):
     """Filter match output for clashes, then minimize the remaining
     structures against the target pose.
 
@@ -47,7 +47,7 @@ def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, rmsd_cutoff = 0.5, sf
 
     minmov = MinMover(mmap, sfx, "dfpmin_armijo_nonmonotone", 0.01, False)
 
-    for (hash, match) in hits:
+    for n, (hash, match) in enumerate(hits):
         proto_pose = pose.clone()
         proto_pose.append_pose_by_jump(match, len(proto_pose.residues))
 
@@ -67,6 +67,9 @@ def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, rmsd_cutoff = 0.5, sf
 
         if (rmsd(ori_coords, min_coords) < rmsd_cutoff):
             yield (hash, minimized)
+
+        if (limit and n + 1 >= limit):
+            break
 
     return []
 

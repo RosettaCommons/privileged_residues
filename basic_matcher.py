@@ -67,19 +67,27 @@ def process(pr, p, args, out):
 
     hits = pr.search(p, args.bidentates + args.networks, selector)
 
-    subindex = 0
     prev = -1
+    buffer = []
+    limit = args.n_cutoff if args.reduced_output else 0
+
     for (hash, pose) in hits:
         if (hash != prev):
+            for n, (_, minimized) in enumerate(filter_clash_minimize(p, buffer, clash_cutoff=args.clash_cutoff, limit=limit)):
+                print("Match found! Pair hash: %d, match number: %d" % (prev, n))
+                minimized.dump_pdb(path.join(out, "result_pair%d_num%d.pdb" % (prev, n)))
+
             prev = hash
-            subindex = 0
+            buffer = []
+        else:
+            buffer.append((hash, pose))
 
-        if (not args.reduced_output or subindex < args.n_cutoff):
-            for (_, minimized) in filter_clash_minimize(p, [(hash, pose)], clash_cutoff=args.clash_cutoff):
-                subindex += 1
+    if (buffer):
+        for n, (_, minimized) in enumerate(filter_clash_minimize(p, buffer, clash_cutoff=args.clash_cutoff, limit=limit)):
+            print("Match found! Pair hash: %d, match number: %d" % (prev, n))
+            minimized.dump_pdb(path.join(out, "result_pair%d_num%d.pdb" % (prev, n)))
 
-                print("Match found! Pair hash: %d, match number: %d" % (hash, subindex))
-                minimized.dump_pdb(path.join(out, "result_pair%d_num%d.pdb" % (hash, subindex)))
+        buffer = []
 
 def main(argv):
     parser = make_parser()
