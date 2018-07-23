@@ -47,9 +47,9 @@ def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, rmsd_cutoff = 0.5, sf
 
     minmov = MinMover(mmap, sfx, "dfpmin_armijo_nonmonotone", 0.01, False)
 
-    for hit in hits:
+    for (hash, match) in hits:
         proto_pose = pose.clone()
-        proto_pose.append_pose_by_jump(hit, len(proto_pose.residues))
+        proto_pose.append_pose_by_jump(match, len(proto_pose.residues))
 
         sfx(proto_pose)
 
@@ -62,9 +62,11 @@ def filter_clash_minimize(pose, hits, clash_cutoff = 35.0, rmsd_cutoff = 0.5, sf
         minmov.apply(proto_pose)
         minimized = proto_pose.split_by_chain(proto_pose.num_chains())
         
-        ori_coords = np.array([atom.xyz() for res in hit.residues for atom in res.atoms()])
+        ori_coords = np.array([atom.xyz() for res in match.residues for atom in res.atoms()])
         min_coords = np.array([atom.xyz() for res in minimized.residues for atom in res.atoms()])
 
         if (rmsd(ori_coords, min_coords) < rmsd_cutoff):
-            yield minimized
+            yield (hash, minimized)
+
+    return []
 

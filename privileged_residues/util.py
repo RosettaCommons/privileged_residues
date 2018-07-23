@@ -21,7 +21,7 @@ def apply_transform(self, xform):
     """
 
     assert(xform.shape == (4, 4)) # homogeneous transform
-    assert_allclose(np.linalg.det(xform[:3,:3]), 1., atol=1e-6)
+    assert_allclose(np.linalg.det(xform[:3,:3]), 1., atol=1e-4)
 
     Rx = numpy_to_rosetta(xform[:3, :3])
     v = V3(*xform[:3, 3])

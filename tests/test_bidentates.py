@@ -31,7 +31,7 @@ def test_bidentate(bdtype, respair):
 
     min_rmsd = 1000.
 
-    for p in pres.search(pose, [bdtype], selector):
+    for (hash, p) in pres.search(pose, [bdtype], selector):
         res = p.residue(1)
         coords = np.stack([res.atom(n).xyz() for n in chemical.functional_groups[res.name()].atoms])
 

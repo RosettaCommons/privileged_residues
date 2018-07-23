@@ -31,7 +31,7 @@ def test_network(nwtype, restrplt):
 
     min_rmsd = 1000.
 
-    for p in pres.search(pose, [nwtype], selector):
+    for (hash, p) in pres.search(pose, [nwtype], selector):
         res = p.residue(1)
         coords = np.stack([res.atom(n).xyz() for n in chemical.functional_groups[res.name()].atoms])
 

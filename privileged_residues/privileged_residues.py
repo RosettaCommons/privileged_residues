@@ -125,7 +125,7 @@ class PrivilegedResidues:
                 continue
             final = np.dot(np.dot(ray_frame, stored_frame), np.linalg.inv(pos_frame))
             dummy_pose.apply_transform(final)
-            yield dummy_pose.clone()
+            yield (hashed_rays, dummy_pose.clone())
 
     # NOTE(onalant): bring your own residue selector
     def search(self, pose, groups, selector):
@@ -139,6 +139,11 @@ class PrivilegedResidues:
             Datasets or groups to search for matches in.
         selector : pyrosetta.rosetta.core.select.residue_selector.ResidueSelector
             Residue selector to apply to the pose.
+
+        Yields
+        ------
+        tuple of np.uint64 and pyrosetta.Pose
+            Target ray pair hash and output pose.
         """
 
         pairs_of_rays = { }

@@ -59,7 +59,7 @@ def make_parser():
 
     return parser
 
-def process_full(pr, p, args, out):
+def process(pr, p, args, out):
     selector = ResidueIndexSelector()
 
     for residue in args.residues:
@@ -67,21 +67,19 @@ def process_full(pr, p, args, out):
 
     hits = pr.search(p, args.bidentates + args.networks, selector)
 
-    for n, hit in enumerate(filter_clash_minimize(p, hits)):
-        hit.dump_pdb(path.join(out, "result_%05d.pdb" % (n)))
+    subindex = 0
+    prev = -1
+    for (hash, pose) in hits:
+        if (hash != prev):
+            prev = hash
+            subindex = 0
 
-def process_reduced(pr, p, args, out):
-    for residue in args.residues:
-        selector = ResidueIndexSelector()
-        selector.append_index(residue)
+        if (not args.reduced_output or subindex < args.n_cutoff):
+            for (_, minimized) in filter_clash_minimize(p, [(hash, pose)], clash_cutoff=args.clash_cutoff):
+                subindex += 1
 
-        hits = pr.search(p, args.bidentates + args.networks, selector)
-
-        for n, hit in enumerate(filter_clash_minimize(p, hits)):
-            if (n >= args.n_cutoff):
-                break
-
-            hit.dump_pdb(path.join(out, "result_res%03d_%05d.pdb" % (residue, n)))
+                print("Match found! Pair hash: %d, match number: %d" % (hash, subindex))
+                minimized.dump_pdb(path.join(out, "result_pair%d_num%d.pdb" % (hash, subindex)))
 
 def main(argv):
     parser = make_parser()
@@ -121,10 +119,7 @@ def main(argv):
     if (args.residues is None):
         args.residues = range(1, len(p) + 1)
 
-    if (args.reduced_output):
-        process_reduced(pr, p, args, out)
-    else:
-        process_full(pr, p, args, out)
+    process(pr, p, args, out)
 
 if __name__ == "__main__":
     freeze_support()
