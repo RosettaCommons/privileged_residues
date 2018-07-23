@@ -36,11 +36,6 @@ setup(
     author_email='weitzner@uw.edu',
     url='https://github.com/RosettaCommons/privileged_residues',
     packages=find_packages(include=['privileged_residues']),
-    entry_points={
-        'console_scripts': [
-            'privileged_residues=privileged_residues.cli:main'
-        ]
-    },
     include_package_data=True,
     install_requires=requirements,
     license="Apache Software License 2.0",
