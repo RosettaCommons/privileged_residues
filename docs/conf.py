@@ -30,19 +30,18 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return MagicMock()
 
-
-class DumbThing():
-    def __init__(self):
-        self.__all__ = []
-
-
 MOCK_MODULES = ['pyrosetta', 'pyrosetta.bindings.utility',
+                'pyrosetta.rosetta', 'pyrosetta.rosetta.core',
+                'pyrosetta.rosetta.core.conformation',
+                'pyrosetta.rosetta.core.import_pose',
                 'pyrosetta.rosetta.core.scoring.hbonds',
                 'pyrosetta.rosetta.core.select.residue_selector',
-                'rif', 'rmsd', 'h5py',]
+                'pyrosetta.rosetta.numeric',
+                'pyrosetta.toolbox', 'pyrosetta.toolbox.numpy_utils',
+                'rif', 'rif.geom', 'rif.geom.ray_hash', 'rif.hash', 
+                'rmsd', 'h5py',]
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-sys.modules.update({'rif.geom.ray_hash': DumbThing(), 'rif.hash': DumbThing()})
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
