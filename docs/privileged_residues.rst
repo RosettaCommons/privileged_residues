@@ -4,18 +4,26 @@ Privileged Residues Package
 Submodules
 ----------
 
-privileged\_residues\.hbond\_ray\_pairs module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+privileged\_residues\.chemical module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: privileged_residues.hbond_ray_pairs
+.. automodule:: privileged_residues.chemical
     :members:
     :undoc-members:
     :show-inheritance:
 
-privileged\_residues\.position\_residue module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+privileged\_residues\.geometry module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: privileged_residues.position_residue
+.. automodule:: privileged_residues.geometry
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+privileged\_residues\.postproc module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: privileged_residues.postproc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,14 +36,21 @@ privileged\_residues\.privileged\_residues module
     :undoc-members:
     :show-inheritance:
 
-privileged\_residues\.process\_networks module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+privileged\_residues\.table module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: privileged_residues.process_networks
+.. automodule:: privileged_residues.table
     :members:
     :undoc-members:
     :show-inheritance:
 
+privileged\_residues\.util module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: privileged_residues.util
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------
