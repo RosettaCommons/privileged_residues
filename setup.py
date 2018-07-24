@@ -29,18 +29,13 @@ test_requirements = [
 
 setup(
     name='privileged_residues',
-    version='0.3.2',
+    version='0.4.1',
     description="Privileged Residues contains methods for placing residues on the surface of a target protein that can be added to a RIF.",
     long_description=readme + '\n\n' + history,
     author="Brian D. Weitzner",
     author_email='weitzner@uw.edu',
     url='https://github.com/RosettaCommons/privileged_residues',
     packages=find_packages(include=['privileged_residues']),
-    entry_points={
-        'console_scripts': [
-            'privileged_residues=privileged_residues.cli:main'
-        ]
-    },
     include_package_data=True,
     install_requires=requirements,
     license="Apache Software License 2.0",
