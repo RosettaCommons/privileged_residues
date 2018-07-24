@@ -1,14 +1,15 @@
-import privileged_residues
-import pyrosetta
-
 import numpy as np
 import os
-import random
 import pytest
 
 from os import path
-from privileged_residues import chemical
 from rmsd import rmsd
+
+privileged_residues = pytest.importorskip("privileged_residues")
+pyrosetta = pytest.importorskip("pyrosetta")
+rif = pytest.importorskip("rif")
+
+from privileged_residues import chemical
 
 curdir = path.dirname(path.abspath(__file__))
 data = [ ("network", path.splitext(rstrplt)[0]) for rstrplt in os.listdir(path.join(curdir, "data", "networks")) ]

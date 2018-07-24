@@ -1,14 +1,15 @@
-import privileged_residues
-import pyrosetta
-
 import numpy as np
 import os
-import random
 import pytest
 
 from os import path
-from privileged_residues import chemical
 from rmsd import rmsd
+
+privileged_residues = pytest.importorskip("privileged_residues")
+pyrosetta = pytest.importorskip("pyrosetta")
+rif = pytest.importorskip("rif")
+
+from privileged_residues import chemical
 
 curdir = path.dirname(path.abspath(__file__))
 data = [ (path.basename(bdtype), path.splitext(respair)[0]) for (bdtype, _, respairs) in os.walk(path.join(curdir, "data", "bidentates")) for respair in respairs ]
