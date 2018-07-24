@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
+import privileged_residues
+# import warnings
 
-"""Top-level package for Privileged Residues."""
-from .privileged_residues import *
-from . import bidentify, hbond_ray_pairs, position_residue, process_bidentates, process_networks
+from .privileged_residues import PrivilegedResidues
 
-__author__ = """Brian D. Weitzner"""
-__email__ = 'weitzner@uw.edu'
-__version__ = '0.2.0'
+__all__ = ["PrivilegedResidues", "chemical", "geometry", "postproc", "util"]
+__version__ = '0.5.0'
+
