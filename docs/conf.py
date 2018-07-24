@@ -39,7 +39,8 @@ class DumbThing():
 MOCK_MODULES = ['pyrosetta', 'pyrosetta.bindings.utility',
                 'pyrosetta.rosetta.core.scoring.hbonds',
                 'pyrosetta.rosetta.core.select.residue_selector',
-                'rif']
+                'rif', 'rmsd', 'h5py',]
+
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 sys.modules.update({'rif.geom.ray_hash': DumbThing(), 'rif.hash': DumbThing()})
 
