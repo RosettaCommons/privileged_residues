@@ -45,6 +45,9 @@ coverage.xml
 *,cover
 .hypothesis/
 
+# pytest
+.pytest_cache/
+
 # Translations
 *.mo
 *.pot
@@ -75,5 +78,10 @@ Session.vim
 *~
 tags
 
+# Miscellanea
 local/
+tests/data
+
+# NFS temporary files
+.nfs*
 
