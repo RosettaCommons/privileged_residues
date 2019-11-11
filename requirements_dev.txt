@@ -11,7 +11,7 @@ cryptography==2.3
 pytest==3.6.3
 pytest-runner==4.2
 docutils==0.14
-numpy==1.15.0
+numpy==1.17.4
 more_itertools==4.2.0
 rmsd==1.2.7
 h5py==2.8.0
