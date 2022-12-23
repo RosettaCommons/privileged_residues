@@ -13,5 +13,5 @@ pytest-runner==4.2
 docutils==0.14
 numpy==1.15.0
 more_itertools==4.2.0
-rmsd==1.2.7
+rmsd==1.5.0
 h5py==2.8.0
