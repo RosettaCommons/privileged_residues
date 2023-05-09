@@ -10,7 +10,7 @@ cryptography==2.3
 # PyYAML==3.13
 pytest==3.6.3
 pytest-runner==4.2
-docutils==0.14
+docutils==0.20
 numpy==1.15.0
 more_itertools==4.2.0
 rmsd==1.2.7
