@@ -14,4 +14,4 @@ docutils==0.14
 numpy==1.15.0
 more_itertools==4.2.0
 rmsd==1.2.7
-h5py==2.8.0
+h5py==3.10.0
